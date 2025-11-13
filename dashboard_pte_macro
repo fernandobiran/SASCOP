@@ -1,0 +1,116 @@
+# Documentación: Dashboard SASCOP v0.5 - Página 1 (Resumen Ejecutivo PTE)
+
+Este documento detalla todos los componentes, medidas DAX y objetos visuales para la Página 1 (Macro) del dashboard de seguimiento de Propuestas Técnico Económicas (PTEs).
+
+---
+
+## 1. 📐 Medidas DAX (Cálculos)
+
+Estas son las fórmulas centrales que potencian el dashboard.
+
+### Medidas Base (KPIs)
+* **[Total PTEs]**
+    * **Propósito:** Conteo total de Propuestas Técnico Económicas.
+    * **Fórmula:**
+        ```dax
+        Total PTEs = COUNTROWS('pte_header')
+        ```
+
+* **[Monto Total Homologado]**
+    * **Propósito:** Suma del valor monetario de todas las PTEs.
+    * **Fórmula:**
+        ```dax
+        Monto Total Homologado = SUM('pte_header'[total_homologado])
+        ```
+
+### Medidas de Estatus (Para Tarjetas KPI)
+*(Nota: El texto "COMPLETADO", etc., debe coincidir 100% con la BD)*
+
+* **[PTEs Completadas]**
+    ```dax
+    PTEs Completadas = 
+    CALCULATE([Total PTEs], 'cat_estatus_pte_header'[descripcion] = "COMPLETADO")
+    ```
+* **[PTEs en Proceso]**
+    ```dax
+    PTEs en Proceso = 
+    CALCULATE([Total PTEs], 'cat_estatus_pte_header'[descripcion] = "PROCESO")
+    ```
+* **[PTEs Pendientes]**
+    ```dax
+    PTEs Pendientes = 
+    CALCULATE([Total PTEs], 'cat_estatus_pte_header'[descripcion] = "PENDIENTE")
+    ```
+* **[PTEs Canceladas]**
+    ```dax
+    PTEs Canceladas = 
+    CALCULATE([Total PTEs], 'cat_estatus_pte_header'[descripcion] = "CANCELADO")
+    ```
+
+### Medidas de Avance Ponderado (Para Matriz)
+* **[Total Importancia Ponderada]**
+    * **Propósito:** Suma el "peso" total de todos los pasos de un proyecto (el "100%").
+    * **Formato:** Número Entero.
+    * **Fórmula:**
+        ```dax
+        Total Importancia Ponderada = 
+        SUMX(
+            'pte_detalle',
+            RELATED('pasos'[importancia])
+        )
+        ```
+
+* **[Avance Ponderado]**
+    * **Propósito:** Suma el "peso" *solo* de los pasos completados.
+    * **Formato:** Número Entero.
+    * **Fórmula:**
+        ```dax
+        Avance Ponderado = 
+        CALCULATE(
+            [Total Importancia Ponderada],
+            'cat_estatus_pte_detalle'[descripcion] = "COMPLETADO"
+        )
+        ```
+
+* **[% Avance Ponderado]**
+    * **Propósito:** El KPI de avance real (Avance / Total).
+    * **Formato:** Porcentaje (%).
+    * **Fórmula:**
+        ```dax
+        % Avance Ponderado = 
+        DIVIDE(
+            [Avance Ponderado],
+            [Total Importancia Ponderada],
+            0
+        )
+        ```
+
+---
+
+## 2. 🎛️ Filtros (Segmentadores de Datos)
+
+Filtros interactivos que controlan toda la página.
+
+* **Segmentador 1: `Segmentación de datos` (Slicer)**
+    * **Campo:** `responsable_proyecto[nombre]`
+    * **Formato:** Menú desplegable.
+    * **Propósito:** Filtrar por líder de proyecto.
+
+* **Segmentador 2: `Segmentación de datos` (Slicer)**
+    * **Campo:** `pte_header[fecha_solicitud]`
+    * **Formato:** Control deslizante (Entre).
+    * **Propósito:** Filtrar por rango de fechas.
+
+---
+
+## 3. 📊 Objetos Visuales (El Lienzo)
+
+Configuración de cada gráfico en el lienzo.
+
+| Visual (Tipo) | Título | Campos | Propósito |
+| :--- | :--- | :--- | :--- |
+| **Tarjeta (Card)** (x6) | KPIs Principales | `[Monto Total Homologado]`<br/>`[Total PTEs]`<br/>`[PTEs Completadas]`<br/>`[PTEs en Proceso]`<br/>`[PTEs Pendientes]`<br/>`[PTEs Canceladas]` | Vista rápida de los indicadores clave. |
+| **Gráfico Circular (Pie)** | Total de Propuestas por Tipo | **Leyenda:** `tipo[descripcion]`<br/>**Valores:** `[Total PTEs]` | Desglose de PTEs por tipo de trabajo. |
+| **Gráfico de Barras (Bar)** | Cantidad de PTEs por Líder | **Eje Y:** `responsable_proyecto[nombre]`<br/>**Eje X:** `[Total PTEs]` | Identificar carga de trabajo por líder. |
+| **Gráfico de Líneas (Line)** | Tendencia de Solicitudes | **Eje X:** `pte_header[fecha_solicitud]`<br/>**Eje Y:** `[Total PTEs]` | Ver la tendencia de entrada de trabajo. |
+| **Matriz (Matrix)** | Monitor de Avance | **Filas:**<br/> 1. `pte_header[oficio_pte]`<br/> 2. `pte_header[descripcion_trabajo]`<br/> 3. `responsable_proyecto[nombre]`<br/><br/>**Valores:**<br/> 1. `[Avance Ponderado]`<br/> 2. `[Total Importancia Ponderada]`<br/> 3. `[% Avance Ponderado]` | El monitor principal para ver el avance real ponderado de cada proyecto. |
