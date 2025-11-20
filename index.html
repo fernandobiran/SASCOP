@@ -1,0 +1,627 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Análisis Estratégico: Convenio Modificatorio N° Uno</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;800&family=Roboto:wght@300;400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --pemex-blue: #002652;
+            --bme-gold: #D4AF37; /* Oro más sobrio */
+            --alert-red: #C0392B;
+            --success-green: #27AE60;
+            --neutral-gray: #ECF0F1;
+            --text-dark: #2C3E50;
+            --card-shadow: 0 10px 25px rgba(0,0,0,0.15);
+        }
+
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: #F4F6F7;
+            color: var(--text-dark);
+            margin: 0;
+            padding: 0;
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* PANEL LATERAL (DASHBOARD) */
+        #dashboard-panel {
+            width: 320px;
+            background: white;
+            height: 100%;
+            padding: 30px;
+            box-shadow: 5px 0 20px rgba(0,0,0,0.05);
+            z-index: 20;
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+        }
+
+        .brand-header {
+            border-bottom: 2px solid var(--bme-gold);
+            padding-bottom: 20px;
+            margin-bottom: 30px;
+        }
+
+        .brand-header h2 {
+            font-family: 'Montserrat', sans-serif;
+            font-size: 20px;
+            color: var(--pemex-blue);
+            margin: 0;
+            font-weight: 800;
+        }
+
+        .brand-header small {
+            color: #7F8C8D;
+            font-weight: 500;
+        }
+
+        .kpi-container {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .kpi-card {
+            background: var(--neutral-gray);
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid var(--pemex-blue);
+        }
+
+        .kpi-value {
+            font-family: 'Montserrat', sans-serif;
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--pemex-blue);
+            display: block;
+        }
+
+        .kpi-label {
+            font-size: 12px;
+            color: #7F8C8D;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .filters {
+            margin-top: auto;
+        }
+
+        .filter-btn {
+            display: block;
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 10px;
+            border: 1px solid #ddd;
+            background: white;
+            border-radius: 6px;
+            cursor: pointer;
+            text-align: left;
+            transition: all 0.3s;
+            font-weight: 500;
+            font-size: 14px;
+            color: var(--text-dark);
+        }
+
+        .filter-btn:hover, .filter-btn.active {
+            background: var(--pemex-blue);
+            color: white;
+            border-color: var(--pemex-blue);
+        }
+        
+        .filter-btn i { width: 20px; }
+
+        /* ÁREA DEL MAPA */
+        #map-area {
+            flex: 1;
+            position: relative;
+            background: radial-gradient(circle at center, #ffffff 0%, #eef2f3 100%);
+            overflow: hidden;
+        }
+
+        /* NODOS */
+        .node {
+            position: absolute;
+            transform: translate(-50%, -50%);
+            cursor: pointer;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            z-index: 10;
+        }
+
+        .node-central {
+            width: 180px;
+            height: 180px;
+            background: var(--pemex-blue);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            border: 6px solid var(--bme-gold);
+            box-shadow: 0 0 50px rgba(0, 38, 82, 0.2);
+            font-family: 'Montserrat', sans-serif;
+            font-weight: 800;
+            font-size: 16px;
+            padding: 10px;
+        }
+
+        .node-branch {
+            width: 220px;
+            background: white;
+            padding: 15px 20px;
+            border-radius: 12px;
+            box-shadow: var(--card-shadow);
+            border-left: 5px solid var(--pemex-blue);
+            font-size: 14px;
+        }
+
+        .node-branch:hover {
+            transform: translate(-50%, -50%) scale(1.05);
+            z-index: 12;
+        }
+
+        .node-branch .node-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .node-number {
+            background: var(--pemex-blue);
+            color: white;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: 700;
+        }
+
+        .node-title {
+            font-weight: 700;
+            color: var(--text-dark);
+            margin-bottom: 5px;
+            line-height: 1.3;
+        }
+
+        .node-tags {
+            display: flex;
+            gap: 5px;
+        }
+
+        .badge {
+            font-size: 10px;
+            padding: 3px 8px;
+            border-radius: 10px;
+            font-weight: 600;
+        }
+
+        .badge.fin { background: #E8F8F5; color: #1ABC9C; }
+        .badge.op { background: #EBF5FB; color: #3498DB; }
+        .badge.strat { background: #FDEDEC; color: #E74C3C; }
+
+        /* CONEXIONES SVG */
+        svg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .connection-line {
+            stroke: #BDC3C7;
+            stroke-width: 2;
+            fill: none;
+            stroke-dasharray: 1000;
+            stroke-dashoffset: 1000;
+            animation: dash 2s ease-out forwards;
+        }
+
+        @keyframes dash {
+            to { stroke-dashoffset: 0; }
+        }
+
+        /* MODAL DE ALTO RAZONAMIENTO */
+        #modal-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.6);
+            backdrop-filter: blur(4px);
+            z-index: 1000;
+            display: none;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .logic-modal {
+            background: white;
+            width: 900px;
+            max-width: 95%;
+            height: 80vh;
+            border-radius: 15px;
+            display: grid;
+            grid-template-columns: 30% 70%;
+            overflow: hidden;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.4);
+        }
+
+        .modal-sidebar {
+            background: var(--pemex-blue);
+            color: white;
+            padding: 30px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .modal-content-area {
+            padding: 40px;
+            overflow-y: auto;
+        }
+
+        .logic-step {
+            margin-bottom: 25px;
+            position: relative;
+            padding-left: 30px;
+        }
+
+        .logic-step::before {
+            content: '';
+            position: absolute;
+            left: 0; top: 0; bottom: 0;
+            width: 3px;
+            background: #ddd;
+        }
+
+        .logic-step.problem::before { background: var(--alert-red); }
+        .logic-step.solution::before { background: var(--bme-gold); }
+        .logic-step.result::before { background: var(--success-green); }
+
+        .step-icon {
+            position: absolute;
+            left: -12px;
+            top: 0;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            color: white;
+        }
+
+        .logic-step.problem .step-icon { background: var(--alert-red); }
+        .logic-step.solution .step-icon { background: var(--bme-gold); }
+        .logic-step.result .step-icon { background: var(--success-green); }
+
+        .step-title {
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #7F8C8D;
+            margin-bottom: 5px;
+        }
+        
+        .step-desc {
+            font-size: 16px;
+            line-height: 1.6;
+            color: var(--text-dark);
+        }
+
+        .close-modal {
+            position: absolute;
+            top: 20px; right: 20px;
+            font-size: 24px;
+            cursor: pointer;
+            color: #999;
+            z-index: 1001;
+        }
+        .close-modal:hover { color: var(--alert-red); }
+
+        /* Opacidad para filtrado */
+        .dimmed {
+            opacity: 0.2;
+            pointer-events: none;
+        }
+
+    </style>
+</head>
+<body>
+
+    <!-- DASHBOARD ANALÍTICO -->
+    <div id="dashboard-panel">
+        <div class="brand-header">
+            <h2>ANÁLISIS ESTRATÉGICO</h2>
+            <small>Contrato No. 648233801</small>
+        </div>
+
+        <div class="kpi-container">
+            <div class="kpi-card">
+                <span class="kpi-label">Monto Total PUEs</span>
+                <span class="kpi-value">$417.2 M</span>
+            </div>
+            <div class="kpi-card">
+                <span class="kpi-label">Prórroga Total</span>
+                <span class="kpi-value">179 Días</span>
+            </div>
+             <div class="kpi-card">
+                <span class="kpi-label">Mejora Flujo Efec.</span>
+                <span class="kpi-value">90 à 30 Días</span>
+            </div>
+        </div>
+
+        <div class="filters">
+            <p style="font-size: 12px; color: #999; text-transform: uppercase; margin-bottom: 10px;">Filtrar Impacto</p>
+            <button class="filter-btn active" onclick="filterNodes('all')">
+                <i class="fa-solid fa-layer-group"></i> Ver Todo
+            </button>
+            <button class="filter-btn" onclick="filterNodes('fin')">
+                <i class="fa-solid fa-coins" style="color: #27AE60;"></i> Financiero
+            </button>
+            <button class="filter-btn" onclick="filterNodes('op')">
+                <i class="fa-solid fa-gears" style="color: #3498DB;"></i> Operativo
+            </button>
+        </div>
+        
+        <div style="margin-top: 20px; font-size: 12px; color: #aaa; line-height: 1.4;">
+            <i class="fa-solid fa-circle-info"></i> Haga clic en los nodos para ver el razonamiento lógico detallado de cada cláusula.
+        </div>
+    </div>
+
+    <!-- ÁREA DE VISUALIZACIÓN -->
+    <div id="map-area">
+        <svg id="connections"></svg>
+        
+        <!-- Nodo Central -->
+        <div class="node node-central" id="center-node">
+            <i class="fa-solid fa-file-signature" style="font-size: 30px; margin-bottom: 10px;"></i>
+            CONVENIO MODIF. N° 1
+        </div>
+
+        <!-- Nodos generados por JS -->
+    </div>
+
+    <!-- MODAL DE RAZONAMIENTO -->
+    <div id="modal-overlay">
+        <div class="logic-modal">
+            <div class="close-modal" onclick="closeModal()"><i class="fa-solid fa-times"></i></div>
+            
+            <div class="modal-sidebar">
+                <h1 id="m-number" style="font-size: 80px; margin: 0; opacity: 0.3;">01</h1>
+                <h3 id="m-title" style="font-size: 24px; margin-top: -20px; margin-bottom: 20px; line-height: 1.2;">Prórroga de Terminación</h3>
+                <div style="margin-top: auto;">
+                    <div style="font-size: 12px; opacity: 0.7;">CLÁUSULA AFECTADA</div>
+                    <div id="m-clausula" style="font-size: 16px; font-weight: 600;">Segunda</div>
+                    <div style="font-size: 12px; opacity: 0.7; margin-top: 10px;">UBICACIÓN</div>
+                    <div id="m-page" style="font-size: 16px; font-weight: 600;">Pág. 36</div>
+                </div>
+            </div>
+
+            <div class="modal-content-area">
+                <h4 style="margin-top: 0; color: var(--pemex-blue); border-bottom: 1px solid #eee; padding-bottom: 10px; margin-bottom: 20px;">Lógica de la Modificación</h4>
+
+                <!-- Paso 1: Problema -->
+                <div class="logic-step problem">
+                    <div class="step-icon"><i class="fa-solid fa-triangle-exclamation"></i></div>
+                    <div class="step-title">1. El Desafío (Antecedente)</div>
+                    <div class="step-desc" id="m-antecedente">
+                        Eventos de Fuerza Mayor (Autoridades) impidieron presentar la embarcación a tiempo. Riesgo de incumplimiento.
+                    </div>
+                </div>
+
+                <!-- Paso 2: Solución -->
+                <div class="logic-step solution">
+                    <div class="step-icon"><i class="fa-solid fa-lightbulb"></i></div>
+                    <div class="step-title">2. La Estrategia (Cambio)</div>
+                    <div class="step-desc" id="m-cambio">
+                        Se reconoce la justificación y se prorroga el contrato 179 días. Nueva fecha: Julio 2033.
+                    </div>
+                </div>
+
+                <!-- Paso 3: Resultado -->
+                <div class="logic-step result">
+                    <div class="step-icon"><i class="fa-solid fa-check"></i></div>
+                    <div class="step-title">3. Impacto Estratégico (Valor)</div>
+                    <div class="step-desc" id="m-impacto">
+                        <strong>Operativo:</strong> Asegura continuidad del proyecto.<br>
+                        <strong>Financiero:</strong> Evita penas convencionales millonarias.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // DATOS CON ESTRUCTURA LÓGICA MEJORADA
+        const data = [
+            {
+                id: 1,
+                type: ['fin', 'op'],
+                title: "Prórroga de Terminación",
+                clausula: "SEGUNDA",
+                page: "Pág. 36",
+                antecedente: "Hubo un impedimento ajeno a la empresa (Fuerza Mayor) de 179 días causado por trámites de Autoridades (Semar/Tribunales). La fecha original (Abril 2023) era imposible de cumplir.",
+                cambio: "Se recorre la fecha de fin de contrato exactamente los 179 días afectados. La nueva fecha de término es el 29 de julio de 2033.",
+                impacto: "Se elimina el riesgo legal de incumplimiento y se evitan penas convencionales, asegurando que el contrato siga vigente por los 10 años completos efectivos."
+            },
+            {
+                id: 2,
+                type: ['op', 'fin'],
+                title: "Modificación de Alcance",
+                clausula: "TERCERA",
+                page: "Pág. 36",
+                antecedente: "PEMEX actualizó su Plan de Trabajo 2025-2030 con una meta agresiva de 1.8M barriles diarios. El contrato original tenía un alcance limitado para esta meta.",
+                cambio: "Se agregan actividades críticas al Anexo B: Bombeos de estimulación, tubería flexible y apoyo a perforación.",
+                impacto: "Maximiza el uso de la embarcación (activo ya contratado) para actividades que generan valor directo a la producción de crudo (Rentabilidad)."
+            },
+            {
+                id: 3,
+                type: ['fin', 'op'],
+                title: "Condiciones Meteorológicas",
+                clausula: "CUARTA",
+                page: "Pág. 36",
+                antecedente: "El límite de pago por mal clima (30 días/año) era irreal frente al histórico real (50-70 días). Esto generaba pérdidas insostenibles para el contratista.",
+                cambio: "Se elimina el tope de 30 días y se pagará según tarifas pactadas en Anexos C, no solo a costo directo.",
+                impacto: "Restaura el equilibrio económico del contrato, protegiendo la viabilidad financiera de BME y asegurando la disponibilidad de la grúa de 850T para PEMEX."
+            },
+            {
+                id: 4,
+                type: ['fin'],
+                title: "Condiciones de Pago",
+                clausula: "QUINTA",
+                page: "Pág. 36",
+                antecedente: "El plazo de pago de 90 días asfixiaba el flujo de efectivo y no se alineaba con los cortes de deuda de BANOBRAS (día 20).",
+                cambio: "Reducción drástica del plazo de pago: de 90 días a solo 30 días tras aceptación de factura.",
+                impacto: "Mejora radicalmente la liquidez (Cash Flow) permitiendo cumplir obligaciones financieras y mantener la operación sin estrés de tesorería."
+            },
+            {
+                id: 5,
+                type: ['op'],
+                title: "Conceptos No Previstos (PUEs)",
+                clausula: "SEXTA",
+                page: "Pág. 36",
+                antecedente: "Surgieron necesidades técnicas en campo (adecuaciones estructurales) no contempladas en el catálogo original, impidiendo cerrar proyectos.",
+                cambio: "Inclusión de 56 nuevos conceptos (PUEs) por un valor de $417.2 Millones MXN (aprox. 2.7% del contrato).",
+                impacto: "Permite terminar obras al 100%, evitando instalaciones inconclusas que generan riesgos de seguridad y difieren producción."
+            },
+            {
+                id: 6,
+                type: ['fin'],
+                title: "Ajuste de Precios",
+                clausula: "SÉPTIMA",
+                page: "Pág. 36",
+                antecedente: "La fórmula original no capturaba correctamente la inflación de insumos especializados (ej. Dique Seco) en un contrato a 10 años.",
+                cambio: "Se sustituye el Anexo AP por uno nuevo que incluye variables (XDn) para 'otros insumos' en moneda extranjera.",
+                impacto: "Garantiza precios justos a lo largo del tiempo, evitando que la inflación erosione la capacidad operativa del proveedor."
+            }
+        ];
+
+        const mapArea = document.getElementById('map-area');
+        const centerNode = document.getElementById('center-node');
+        const svg = document.getElementById('connections');
+
+        // INICIALIZACIÓN Y LAYOUT RADIAL
+        function initMap() {
+            const centerX = mapArea.offsetWidth / 2;
+            const centerY = mapArea.offsetHeight / 2;
+            const radius = Math.min(centerX, centerY) * 0.7; // Radio dinámico
+
+            // Posicionar nodo central
+            centerNode.style.left = centerX + 'px';
+            centerNode.style.top = centerY + 'px';
+
+            // Limpiar nodos existentes (excepto central)
+            document.querySelectorAll('.node-branch').forEach(e => e.remove());
+            svg.innerHTML = '';
+
+            data.forEach((item, index) => {
+                // Cálculo matemático para distribución circular perfecta
+                const angle = (index * (360 / data.length) - 90) * (Math.PI / 180); // -90 para empezar arriba
+                const x = centerX + radius * Math.cos(angle);
+                const y = centerY + radius * Math.sin(angle);
+
+                createNode(item, x, y, index + 1);
+                drawCurve(centerX, centerY, x, y);
+            });
+        }
+
+        function createNode(item, x, y, index) {
+            const node = document.createElement('div');
+            node.className = `node node-branch ${item.type.join(' ')}`;
+            node.style.left = x + 'px';
+            node.style.top = y + 'px';
+            node.dataset.id = item.id;
+            
+            // Etiquetas visuales
+            let badges = '';
+            if(item.type.includes('fin')) badges += '<span class="badge fin">FINANCIERO</span>';
+            if(item.type.includes('op')) badges += '<span class="badge op">OPERATIVO</span>';
+
+            node.innerHTML = `
+                <div class="node-header">
+                    <div class="node-number">${index}</div>
+                    <div class="node-tags">${badges}</div>
+                </div>
+                <div class="node-title">${item.title}</div>
+                <div style="font-size: 11px; color: #999;">Cláusula: ${item.clausula}</div>
+            `;
+
+            node.onclick = () => openModal(item, index);
+            mapArea.appendChild(node);
+        }
+
+        function drawCurve(x1, y1, x2, y2) {
+            const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+            // Curva Bezier simple desde el centro
+            const cx = (x1 + x2) / 2;
+            const cy = (y1 + y2) / 2;
+            
+            const d = `M ${x1} ${y1} Q ${cx} ${cy} ${x2} ${y2}`;
+            
+            path.setAttribute("d", d);
+            path.setAttribute("class", "connection-line");
+            svg.appendChild(path);
+        }
+
+        // FUNCIONES DE FILTRADO
+        function filterNodes(type) {
+            // Actualizar botones
+            document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
+            event.currentTarget.classList.add('active');
+
+            const nodes = document.querySelectorAll('.node-branch');
+            const lines = document.querySelectorAll('.connection-line');
+
+            nodes.forEach((node, index) => {
+                const isMatch = type === 'all' || node.classList.contains(type);
+                
+                if (isMatch) {
+                    node.classList.remove('dimmed');
+                    lines[index].style.opacity = 1;
+                } else {
+                    node.classList.add('dimmed');
+                    lines[index].style.opacity = 0.1;
+                }
+            });
+        }
+
+        // FUNCIONES MODAL
+        function openModal(item, index) {
+            document.getElementById('m-number').innerText = '0' + (index);
+            document.getElementById('m-title').innerText = item.title;
+            document.getElementById('m-clausula').innerText = item.clausula;
+            document.getElementById('m-page').innerText = item.page;
+            document.getElementById('m-antecedente').innerText = item.antecedente;
+            document.getElementById('m-cambio').innerText = item.cambio;
+            document.getElementById('m-impacto').innerHTML = item.impacto; // innerHTML para permitir negritas
+
+            document.getElementById('modal-overlay').style.display = 'flex';
+        }
+
+        function closeModal() {
+            document.getElementById('modal-overlay').style.display = 'none';
+        }
+
+        // Redibujar al cambiar tamaño
+        window.addEventListener('resize', initMap);
+        // Iniciar
+        initMap();
+
+    </script>
+</body>
+</html>
