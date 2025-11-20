@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Comparador de Flota BME</title>
+    <!-- Chosen Palette: "Warm Neutral" (bg-slate-100, text-slate-800) with a professional "Corporate Blue" (blue-700) and "Amber" (amber-500) accent. This palette is calm, professional, and enhances readability. -->
+    <!-- Application Structure Plan: The source report is structured by *vessel*, which makes comparison difficult. This SPA is restructured by *feature*, using a main 3-column comparison dashboard. This is the most logical architecture for user understanding, allowing immediate side-by-side analysis of specs (Ficha Técnica, Grúas, Propulsión). Bar charts are used to visually compare key metrics (Alojamiento, Grúas). Navigation is handled by a sticky header for easy scrolling to these thematic sections. -->
+    <!-- Visualization & Content Choices:
+        - Misión/Valores: (Report) -> (Goal: Inform) -> (Viz: Text Cards) -> (Interaction: Read) -> (Justification: Context/Intro) -> (Method: HTML/Tailwind Grid).
+        - Vessel Specs (Eslora, Calado, DP, etc.): (Report) -> (Goal: Compare) -> (Viz: 3-Column Table Layout) -> (Interaction: Read) -> (Justification: Direct side-by-side comparison is the fastest way to consume this data, superior to the report's linear layout.) -> (Method: HTML/Tailwind Grid).
+        - Alojamiento (250, 399, 153): (Report) -> (Goal: Compare) -> (Viz: Bar Chart) -> (Interaction: Hover Tooltip) -> (Justification: Visually highlights the significant difference in capacity, especially the 'Blue Giant'.) -> (Method: Chart.js Canvas).
+        - Grúa Principal (250T, 1100T, 400T): (Report) -> (Goal: Compare) -> (Viz: Bar Chart) -> (Interaction: Hover Tooltip) -> (Justification: Visually emphasizes the 'Blue Giant's' massive 1100T capacity, a key selling point.) -> (Method: Chart.js Canvas).
+        - CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. All diagrams are either HTML/Tailwind structures or rendered on Chart.js Canvas. -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Google Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+    
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            scroll-behavior: smooth;
+        }
+        /* Estilo para la cabecera sticky */
+        .sticky-nav {
+            position: sticky;
+            top: 0;
+            z-index: 50;
+        }
+        /* Estilos para las tablas comparativas */
+        .spec-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .spec-table th, .spec-table td {
+            text-align: left;
+            padding: 12px 10px;
+            border-bottom: 1px solid #e5e7eb; /* slate-200 */
+        }
+        .spec-table tr:last-child th, .spec-table tr:last-child td {
+            border-bottom: none;
+        }
+        .spec-table th {
+            background-color: #f9fafb; /* slate-50 */
+            color: #4b5563; /* slate-600 */
+            font-weight: 600;
+            width: 40%;
+        }
+        .spec-table td {
+            color: #1f2937; /* slate-800 */
+            font-weight: 500;
+        }
+        /* Estilo para los contenedores de gráficos */
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 800px; /* Previene que sea demasiado ancho en pantallas grandes */
+            margin-left: auto;
+            margin-right: auto;
+            height: 400px;
+            max-height: 400px;
+        }
+        @media (max-width: 768px) {
+            .chart-container {
+                height: 300px;
+                max-height: 300px;
+            }
+        }
+    </style>
+</head>
+<body class="bg-slate-100 text-slate-800">
+
+    <!-- Cabecera de Navegación -->
+    <header class="sticky-nav bg-white shadow-md">
+        <nav class="container mx-auto px-4 lg:px-6 py-4 flex justify-between items-center">
+            <div class="text-2xl font-bold text-blue-700">
+                <span class="text-amber-500">BME</span> Flota
+            </div>
+            <div class="space-x-4">
+                <a href="#inicio" class="text-slate-600 hover:text-blue-700 font-medium">Inicio</a>
+                <a href="#comparador" class="text-slate-600 hover:text-blue-700 font-medium">Comparador</a>
+                <a href="#visualizacion" class="text-slate-600 hover:text-blue-700 font-medium">Visualización</a>
+                <a href="#valores" class="text-slate-600 hover:text-blue-700 font-medium">Valores</a>
+            </div>
+        </nav>
+    </header>
+
+    <!-- Sección de Inicio (Misión y Visión) -->
+    <section id="inicio" class="py-16 lg:py-24">
+        <div class="container mx-auto px-4 lg:px-6 max-w-5xl">
+            <h1 class="text-4xl lg:text-5xl font-extrabold text-blue-700 text-center mb-12">Impulsando la Industria Energética</h1>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div class="bg-white rounded-lg shadow-lg p-8">
+                    <h2 class="text-2xl font-bold text-amber-500 mb-4">Misión</h2>
+                    <p class="text-slate-600 leading-relaxed">Proveer servicios integrales de la más alta calidad y con tecnología de punta, en las industrias energética, de la infraestructura y logística, salvaguardando la seguridad de nuestros colaboradores, en armonía con las comunidades y el medio ambiente donde operamos.</p>
+                </div>
+                <div class="bg-white rounded-lg shadow-lg p-8">
+                    <h2 class="text-2xl font-bold text-amber-500 mb-4">Visión</h2>
+                    <p class="text-slate-600 leading-relaxed">Convertirnos en el grupo industrial líder de los sectores donde operamos, distinguido por su rentabilidad, eficiencia operativa, capacidad de innovación y construir alianzas; caracterizado por sus planes de desarrollo, regido bajo una estricta ética corporativa.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Sección Comparador de Flota -->
+    <section id="comparador" class="py-16 lg:py-24 bg-white">
+        <div class="container mx-auto px-4 lg:px-6">
+            <h2 class="text-3xl lg:text-4xl font-extrabold text-blue-700 text-center mb-4">Comparador de Flota</h2>
+            <p class="text-center text-slate-600 max-w-3xl mx-auto mb-12">Esta aplicación reestructura la información del brochure en un panel comparativo. Analice las especificaciones clave de nuestros principales activos lado a lado para una toma de decisiones informada.</p>
+
+            <!-- Panel de Comparación -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                
+                <!-- Columna 1: BPD BLUE STINGRAY -->
+                <div class="rounded-lg shadow-xl overflow-hidden bg-white border border-slate-200">
+                    <div class="p-6 bg-blue-700">
+                        <h3 class="text-2xl font-bold text-white">BPD Blue Stingray</h3>
+                        <p class="text-blue-200 text-sm">IMO: 9440370 | Año: 2010</p>
+                    </div>
+                    <div class="divide-y divide-slate-200">
+                        <details class="p-4" open>
+                            <summary class="font-bold text-lg text-slate-700 cursor-pointer">Dimensiones y Tonelaje</summary>
+                            <table class="spec-table mt-4">
+                                <tr><th>Eslora Total</th><td>105 m</td></tr>
+                                <tr><th>Calado Máximo</th><td>5 m</td></tr>
+                                <tr><th>Arqueo Bruto (GT)</th><td>7,217 T</td></tr>
+                                <tr><th>Arqueo Neto (NT)</th><td>2,165 T</td></tr>
+                            </table>
+                        </details>
+                        <details class="p-4">
+                            <summary class="font-bold text-lg text-slate-700 cursor-pointer">Capacidades</summary>
+                            <table class="spec-table mt-4">
+                                <tr><th>Área Libre Cubierta</th><td>900 m²</td></tr>
+                                <tr><th>Combustible (Diésel)</th><td>600 m³</td></tr>
+                                <tr><th>Agua Potable</th><td>1,119 m³</td></tr>
+                                <tr><th>Alojamiento</th><td>250 Personas</td></tr>
+                            </table>
+                        </details>
+                        <details class="p-4">
+                            <summary class="font-bold text-lg text-slate-700 cursor-pointer">Propulsión y DP</summary>
+                            <table class="spec-table mt-4">
+                                <tr><th>Generadores</th><td>4 x Cat 3516 B (1901 kW)</td></tr>
+                                <tr><th>Propulsores</th><td>2 x Azimutales VETH (1500 kW)</td></tr>
+                                <tr><th>Thrusters Proa</th><td>3 x VETH VT1800 (900 kW)</td></tr>
+                                <tr><th>Sistema DP</th><td>Navis DP II</td></tr>
+                            </table>
+                        </details>
+                        <details class="p-4">
+                            <summary class="font-bold text-lg text-slate-700 cursor-pointer">Equipos de Izaje</summary>
+                            <table class="spec-table mt-4">
+                                <tr><th>Grúa Principal</th><td>Liebherr (250 T)</td></tr>
+                                <tr><th>Grúa Auxiliar</th><td>Sormec (10 T)</td></tr>
+                            </table>
+                        </details>
+                    </div>
+                </div>
+
+                <!-- Columna 2: BPD BLUE GIANT -->
+                <div class="rounded-lg shadow-xl overflow-hidden bg-white border-4 border-amber-500 transform lg:scale-105">
+                    <div class="p-6 bg-amber-500">
+                        <h3 class="text-2xl font-bold text-white">BPD Blue Giant</h3>
+                        <p class="text-amber-100 text-sm">IMO: 9203095 | Año: 1998 (Conv. 2008)</p>
+                    </div>
+                    <div class="divide-y divide-slate-200">
+                        <details class="p-4" open>
+                            <summary class="font-bold text-lg text-slate-700 cursor-pointer">Dimensiones y Tonelaje</summary>
+                            <table class="spec-table mt-4">
+                                <tr><th>Eslora Total</th><td>159.0 m</td></tr>
+                                <tr><th>Calado Máximo</th><td>9.0 m</td></tr>
+                                <tr><th>Arqueo Bruto (GT)</th><td>19,204 UAB</td></tr>
+                                <tr><th>Arqueo Neto (NT)</th><td>5,761 UAN</td></tr>
+                            </table>
+                        </details>
+                        <details class="p-4">
+                            <summary class="font-bold text-lg text-slate-700 cursor-pointer">Capacidades</summary>
+                            <table class="spec-table mt-4">
+                                <tr><th>Área Libre Cubierta</th><td>1,200 m²</td></tr>
+                                <tr><th>Combustible (Diésel)</th><td>1,470 m³</td></tr>
+                                <tr><th>Agua Potable</th><td>495.5 m³</td></tr>
+                                <tr><th>Alojamiento</th><td>399 Personas</td></tr>
+                            </table>
+                        </details>
+                        <details class="p-4">
+                            <summary class="font-bold text-lg text-slate-700 cursor-pointer">Propulsión y DP</summary>
+                            <table class="spec-table mt-4">
+                                <tr><th>Generadores</th><td>6 x WÄRTSILÄ (2360 kW) + 3 x Cat (1600 kW)</td></tr>
+                                <tr><th>Propulsores</th><td>2 x 2500 kW + 3 x 1420 kW</td></tr>
+                                <tr><th>Thrusters Proa</th><td>5 x 1500 kW (Rolls Royce)</td></tr>
+                                <tr><th>Sistema DP</th><td>Kongsberg DP2</td></tr>
+                            </table>
+                        </details>
+                        <details class="p-4">
+                            <summary class="font-bold text-lg text-slate-700 cursor-pointer">Equipos de Izaje</summary>
+                            <table class="spec-table mt-4">
+                                <tr><th>Grúa Principal</th><td>Amclyde (1,100 T @ 22m)</td></tr>
+                                <tr><th>Grúa Auxiliar 1</th><td>Liebherr (40 T)</td></tr>
+                                <tr><th>Grúa Auxiliar 2</th><td>KEW-SCHWERIN (25 T)</td></tr>
+                            </table>
+                        </details>
+                    </div>
+                </div>
+
+                <!-- Columna 3: BPD HOS IRON HORSE -->
+                <div class="rounded-lg shadow-xl overflow-hidden bg-white border border-slate-200">
+                    <div class="p-6 bg-blue-700">
+                        <h3 class="text-2xl font-bold text-white">HOS Iron Horse</h3>
+                        <p class="text-blue-200 text-sm">IMO: 9457050 | Clase: ABS DPS-3</p>
+                    </div>
+                    <div class="divide-y divide-slate-200">
+                        <details class="p-4" open>
+                            <summary class="font-bold text-lg text-slate-700 cursor-pointer">Dimensiones y Tonelaje</summary>
+                            <table class="spec-table mt-4">
+                                <tr><th>Eslora Total</th><td>131.7 m</td></tr>
+                                <tr><th>Calado Máximo</th><td>6.25 m</td></tr>
+                                <tr><th>Arqueo Bruto (GT)</th><td>8,988 T</td></tr>
+                                <tr><th>Arqueo Neto (NT)</th><td>2,697 T</td></tr>
+                            </table>
+                        </details>
+                        <details class="p-4">
+                            <summary class="font-bold text-lg text-slate-700 cursor-pointer">Capacidades</summary>
+                            <table class="spec-table mt-4">
+                                <tr><th>Carga en Cubierta</th><td>10 T/m² (Total 4,400 T)</td></tr>
+                                <tr><th>Combustible (Diésel)</th><td>1,334 m³</td></tr>
+                                <tr><th>Agua Potable</th><td>520 m³</td></tr>
+                                <tr><th>Alojamiento</th><td>153 Personas</td></tr>
+                            </table>
+                        </details>
+                        <details class="p-4">
+                            <summary class="font-bold text-lg text-slate-700 cursor-pointer">Propulsión y DP</summary>
+                            <table class="spec-table mt-4">
+                                <tr><th>Generadores</th><td>4 x MAN B&W (Total 11,536 kW)</td></tr>
+                                <tr><th>Propulsores</th><td>2 x Azimutales CPP (Total 6,002 kW)</td></tr>
+                                <tr><th>Thrusters Proa</th><td>2 x Túnel (2,684 kW) + 1 x Retráctil (1,193 kW)</td></tr>
+                                <tr><th>Sistema DP</th><td>Kongsberg DP-3</td></tr>
+                            </table>
+                        </details>
+                        <details class="p-4">
+                            <summary class="font-bold text-lg text-slate-700 cursor-pointer">Equipos de Izaje</summary>
+                            <table class="spec-table mt-4">
+                                <tr><th>Grúa Principal</th><td>Huisman AHC (400 T)</td></tr>
+                                <tr><th>Grúa Auxiliar</th><td>Knuckle Boom AHC (120 T)</td></tr>
+                            </table>
+                        </details>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </section>
+
+    <!-- Sección de Visualización de Datos (Gráficos) -->
+    <section id="visualizacion" class="py-16 lg:py-24">
+        <div class="container mx-auto px-4 lg:px-6">
+            <h2 class="text-3xl lg:text-4xl font-extrabold text-blue-700 text-center mb-4">Visualización de Datos</h2>
+            <p class="text-center text-slate-600 max-w-3xl mx-auto mb-12">Algunas métricas son más fáciles de entender visualmente. Estos gráficos comparan las capacidades clave de la flota para identificar rápidamente el activo adecuado para cada tipo de trabajo.</p>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-12">
+                <!-- Gráfico 1: Capacidad de Alojamiento -->
+                <div class="bg-white rounded-lg shadow-lg p-6">
+                    <h3 class="text-xl font-bold text-slate-700 text-center mb-4">Capacidad de Alojamiento (Personas)</h3>
+                    <p class="text-sm text-slate-500 text-center mb-6">El "Blue Giant" destaca por su capacidad de hotel flotante, ideal para campañas con personal extensivo.</p>
+                    <div class="chart-container">
+                        <canvas id="accommodationChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Gráfico 2: Capacidad de Grúa Principal -->
+                <div class="bg-white rounded-lg shadow-lg p-6">
+                    <h3 class="text-xl font-bold text-slate-700 text-center mb-4">Capacidad de Grúa Principal (Toneladas)</h3>
+                    <p class="text-sm text-slate-500 text-center mb-6">El "Blue Giant" posee una capacidad de izaje de 1,100 toneladas, siendo el activo principal para trabajos de construcción pesada.</p>
+                    <div class="chart-container">
+                        <canvas id="craneChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Sección de Valores -->
+    <section id="valores" class="py-16 lg:py-24 bg-blue-700">
+        <div class="container mx-auto px-4 lg:px-6">
+            <h2 class="text-3xl lg:text-4xl font-extrabold text-white text-center mb-12">Nuestros Valores</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                
+                <div class="bg-white rounded-lg shadow-md p-6">
+                    <h3 class="font-bold text-amber-500 text-lg mb-2">Compromiso</h3>
+                    <p class="text-sm text-slate-600">Generar beneficios sociales en las comunidades donde trabajamos y sostenibilidad en el medio ambiente.</p>
+                </div>
+                <div class="bg-white rounded-lg shadow-md p-6">
+                    <h3 class="font-bold text-amber-500 text-lg mb-2">Ética</h3>
+                    <p class="text-sm text-slate-600">Actuar con responsabilidad, honestidad y transparencia.</p>
+                </div>
+                <div class="bg-white rounded-lg shadow-md p-6">
+                    <h3 class="font-bold text-amber-500 text-lg mb-2">Honestidad</h3>
+                    <p class="text-sm text-slate-600">Actuar con rectitud, obedecer las distintas leyes que regulan nuestra conducta y el marco normativo.</p>
+                </div>
+                <div class="bg-white rounded-lg shadow-md p-6">
+                    <h3 class="font-bold text-amber-500 text-lg mb-2">Inclusión</h3>
+                    <p class="text-sm text-slate-600">Aceptar y sumar a las personas sin importar su origen étnico, género, religión, o preferencias.</p>
+                </div>
+                <div class="bg-white rounded-lg shadow-md p-6">
+                    <h3 class="font-bold text-amber-500 text-lg mb-2">Integridad</h3>
+                    <p class="text-sm text-slate-600">Pensar y actuar de forma ética, aun cuando nadie sea testigo de nuestros actos.</p>
+                </div>
+                <div class="bg-white rounded-lg shadow-md p-6">
+                    <h3 class="font-bold text-amber-500 text-lg mb-2">Liderazgo</h3>
+                    <p class="text-sm text-slate-600">Motivar e influir positivamente con el ejemplo; desarrollar talento en todos los niveles.</p>
+                </div>
+                
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-slate-800 text-slate-400 py-8">
+        <div class="container mx-auto px-4 lg:px-6 text-center text-sm">
+            <p>&copy; 2025 BME. Todos los derechos reservados. Esta es una aplicación web generada para análisis de flota.</p>
+        </div>
+    </footer>
+
+    <script>
+        // Lógica de Navegación Suave (Smooth Scroll)
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                try {
+                    document.querySelector(this.getAttribute('href')).scrollIntoView({
+                        behavior: 'smooth'
+                    });
+                } catch (error) {
+                    console.warn('Error de navegación:', error);
+                }
+            });
+        });
+
+        // Función para envolver texto en tooltips de Chart.js
+        function wrapText(str) {
+            const words = str.split(' ');
+            const lines = [];
+            let currentLine = '';
+            words.forEach(word => {
+                if (currentLine.length + word.length <= 16) {
+                    currentLine += (currentLine ? ' ' : '') + word;
+                } else {
+                    lines.push(currentLine);
+                    currentLine = word;
+                }
+            });
+            lines.push(currentLine);
+            return lines;
+        }
+
+        // Lógica de Gráficos
+        document.addEventListener('DOMContentLoaded', () => {
+            // Datos extraídos del brochure
+            const accommodationData = {
+                labels: ['BPD Blue Stingray', 'BPD Blue Giant', 'HOS Iron Horse'],
+                datasets: [{
+                    label: 'Capacidad de Alojamiento (Personas)',
+                    data: [250, 399, 153],
+                    backgroundColor: [
+                        'rgba(59, 130, 246, 0.7)', // blue-500
+                        'rgba(245, 158, 11, 0.7)', // amber-500
+                        'rgba(30, 64, 175, 0.7)'  // blue-800
+                    ],
+                    borderColor: [
+                        'rgba(59, 130, 246, 1)',
+                        'rgba(245, 158, 11, 1)',
+                        'rgba(30, 64, 175, 1)'
+                    ],
+                    borderWidth: 1
+                }]
+            };
+
+            const craneData = {
+                labels: ['BPD Blue Stingray (Liebherr)', 'BPD Blue Giant (Amclyde)', 'HOS Iron Horse (Huisman)'],
+                datasets: [{
+                    label: 'Capacidad Máx. Grúa Principal (T)',
+                    data: [250, 1100, 400],
+                    backgroundColor: [
+                        'rgba(59, 130, 246, 0.7)', // blue-500
+                        'rgba(245, 158, 11, 0.7)', // amber-500
+                        'rgba(30, 64, 175, 0.7)'  // blue-800
+                    ],
+                    borderColor: [
+                        'rgba(59, 130, 246, 1)',
+                        'rgba(245, 158, 11, 1)',
+                        'rgba(30, 64, 175, 1)'
+                    ],
+                    borderWidth: 1
+                }]
+            };
+
+            const chartOptions = {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: { color: '#4b5563' } // slate-600
+                    },
+                    x: {
+                        ticks: { color: '#4b5563' } // slate-600
+                    }
+                },
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    tooltip: {
+                        callbacks: {
+                            title: function(tooltipItems) {
+                                // Envolver título si es muy largo
+                                return wrapText(tooltipItems[0].label);
+                            }
+                        }
+                    }
+                }
+            };
+
+            // Renderizar Gráfico 1
+            const ctxAccommodation = document.getElementById('accommodationChart').getContext('2d');
+            new Chart(ctxAccommodation, {
+                type: 'bar',
+                data: accommodationData,
+                options: chartOptions
+            });
+
+            // Renderizar Gráfico 2
+            const ctxCrane = document.getElementById('craneChart').getContext('2d');
+            new Chart(ctxCrane, {
+                type: 'bar',
+                data: craneData,
+                options: chartOptions
+            });
+        });
+    </script>
+</body>
+</html>
