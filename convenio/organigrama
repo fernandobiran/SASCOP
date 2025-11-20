@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Organigrama Proyecto GARZPROM-2 | BME</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;600;700;800&family=Roboto:wght@300;400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        :root {
+            /* PALETA CORPORATIVA */
+            --c-fuerza: #f05523;
+            --c-seriedad: #20145f;    /* Personal Contrato */
+            --c-confianza: #51c2eb;   /* Personal Operativo */
+            --c-solidez: #54565a;
+            --c-dinamismo: #fad91f;
+            --c-energia: #8cc63f;
+            --bg-body: #f4f7f9;
+        }
+
+        * { box-sizing: border-box; }
+        body { 
+            margin: 0; font-family: 'Roboto', sans-serif; background: var(--bg-body); 
+            height: 100vh; display: flex; flex-direction: column; overflow: hidden;
+        }
+
+        /* --- CABECERA --- */
+        header {
+            background: white; padding: 15px 30px; border-bottom: 4px solid var(--c-dinamismo);
+            display: flex; justify-content: space-between; align-items: center; z-index: 100;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+        h1 { font-family: 'Montserrat', sans-serif; color: var(--c-seriedad); margin: 0; font-size: 20px; font-weight: 800; }
+        h2 { font-family: 'Montserrat', sans-serif; color: var(--c-fuerza); margin: 0; font-size: 14px; font-weight: 600; }
+
+        /* --- CONTROLES DE ZOOM --- */
+        .controls {
+            position: fixed; bottom: 20px; right: 20px; z-index: 1000;
+            background: white; padding: 10px; border-radius: 50px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1); display: flex; gap: 10px;
+        }
+        .ctrl-btn {
+            width: 40px; height: 40px; border-radius: 50%; border: none; cursor: pointer;
+            background: var(--c-seriedad); color: white; font-size: 16px; transition: 0.2s;
+        }
+        .ctrl-btn:hover { background: var(--c-fuerza); transform: scale(1.1); }
+
+        /* --- LAYOUT PRINCIPAL (GRID) --- */
+        #main-layout {
+            display: grid;
+            grid-template-columns: 250px 1fr 250px; /* Izq - Centro - Der */
+            height: 100%;
+            overflow: hidden;
+        }
+
+        /* --- COLUMNAS LATERALES (APOYO) --- */
+        .support-col {
+            background: white; padding: 20px; overflow-y: auto;
+            border-right: 1px solid #eee; border-left: 1px solid #eee;
+            display: flex; flex-direction: column; gap: 30px;
+        }
+        .support-group h3 {
+            color: var(--c-solidez); font-size: 12px; text-transform: uppercase; 
+            border-bottom: 2px solid var(--c-fuerza); padding-bottom: 5px; margin-bottom: 15px;
+        }
+        .support-card {
+            background: var(--c-seriedad); color: white; padding: 12px; margin-bottom: 10px;
+            border-radius: 6px; font-size: 11px; text-align: center; font-weight: 500;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1); transition: 0.3s; cursor: default;
+        }
+        .support-card:hover { transform: translateX(5px); background: var(--c-fuerza); }
+        
+        /* Áreas Offshore (Diferenciadas) */
+        .offshore-area .support-card { background: var(--c-seriedad); border-left: 4px solid var(--c-dinamismo); }
+
+
+        /* --- ÁREA CENTRAL (ORGANIGRAMA) --- */
+        #org-container {
+            overflow: auto; /* Scroll en todas direcciones */
+            background: radial-gradient(#e5e5e5 1px, transparent 1px);
+            background-size: 20px 20px;
+            display: flex; justify-content: center; padding: 50px;
+            cursor: grab;
+        }
+        #org-container:active { cursor: grabbing; }
+
+        /* Transform Wrapper para el Zoom */
+        #zoom-wrapper {
+            transform-origin: top center; transition: transform 0.3s ease;
+        }
+
+        /* --- ESTILOS DEL ÁRBOL (CSS TREE) --- */
+        .tree ul {
+            padding-top: 20px; position: relative; display: flex; justify-content: center;
+        }
+        .tree li {
+            float: left; text-align: center; list-style-type: none; position: relative; padding: 20px 5px 0 5px;
+        }
+        /* Conectores */
+        .tree li::before, .tree li::after {
+            content: ''; position: absolute; top: 0; right: 50%; border-top: 2px solid #ccc; width: 50%; height: 20px;
+        }
+        .tree li::after { right: auto; left: 50%; border-left: 2px solid #ccc; }
+        .tree li:only-child::after, .tree li:only-child::before { display: none; }
+        .tree li:only-child { padding-top: 0; }
+        .tree li:first-child::before, .tree li:last-child::after { border: 0 none; }
+        .tree li:last-child::before{ border-right: 2px solid #ccc; border-radius: 0 5px 0 0; }
+        .tree li:first-child::after{ border-radius: 5px 0 0 0; }
+        .tree ul ul::before{ content: ''; position: absolute; top: 0; left: 50%; border-left: 2px solid #ccc; width: 0; height: 20px; }
+
+        /* TARJETAS DE NODO */
+        .node {
+            display: inline-block; padding: 10px; text-decoration: none; 
+            border-radius: 4px; transition: all 0.3s; min-width: 140px; max-width: 180px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1); position: relative; z-index: 10;
+        }
+        .node:hover { transform: scale(1.1); z-index: 20; box-shadow: 0 10px 20px rgba(0,0,0,0.2); }
+        
+        /* Tipos de Nodo (Colores según imagen) */
+        .n-contract { background: var(--c-seriedad); color: white; } /* Azul Oscuro */
+        .n-operative { background: var(--c-confianza); color: white; } /* Cian */
+        
+        .n-role { font-size: 10px; text-transform: uppercase; display: block; margin-bottom: 4px; opacity: 0.9; font-weight: 600; }
+        .n-name { font-size: 12px; font-weight: 700; display: block; line-height: 1.2; }
+
+        /* Conectores especiales para ramas laterales (Patio / Materiales) */
+        .dashed-connector {
+            border-top: 2px dashed #ccc !important;
+        }
+
+        /* Simbología Flotante */
+        .legend {
+            position: absolute; top: 80px; left: 270px; background: white; padding: 15px;
+            border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); z-index: 90;
+        }
+        .legend-item { display: flex; align-items: center; font-size: 11px; margin-bottom: 5px; color: var(--c-solidez); }
+        .legend-box { width: 15px; height: 15px; margin-right: 8px; border-radius: 3px; }
+
+    </style>
+</head>
+<body>
+
+    <header>
+        <div>
+            <h1>BME SUBTEC</h1>
+            <h2>Organigrama Proyecto GARZPROM - 2 (C-801)</h2>
+        </div>
+        <div>
+            <img src="https://via.placeholder.com/100x30?text=LOGO" alt="Logo" style="opacity: 0.5;">
+        </div>
+    </header>
+
+    <!-- CONTROLES ZOOM -->
+    <div class="controls">
+        <button class="ctrl-btn" onclick="zoomOut()"><i class="fa-solid fa-minus"></i></button>
+        <button class="ctrl-btn" onclick="zoomIn()"><i class="fa-solid fa-plus"></i></button>
+    </div>
+
+    <!-- SIMBOLOGÍA -->
+    <div class="legend">
+        <div class="legend-item">
+            <div class="legend-box" style="background: var(--c-seriedad);"></div> Personal por Contrato
+        </div>
+        <div class="legend-item">
+            <div class="legend-box" style="background: var(--c-confianza);"></div> Personal por Req. Operativo
+        </div>
+    </div>
+
+    <div id="main-layout">
+        
+        <!-- BARRA IZQUIERDA (APOYO) -->
+        <aside class="support-col">
+            <div class="support-group">
+                <h3>Apoyo Onshore</h3>
+                <div class="support-card">Recursos Humanos</div>
+                <div class="support-card">Procura</div>
+                <div class="support-card">Admin. y Finanzas</div>
+                <div class="support-card">QHSE</div>
+                <div class="support-card">Planeación y Prog.</div>
+                <div class="support-card">Almacén</div>
+            </div>
+            <div class="support-group offshore-area">
+                <h3>Apoyo Offshore</h3>
+                <div class="support-card">QHSE</div>
+                <div class="support-card">Planeación</div>
+                <div class="support-card">Almacén</div>
+            </div>
+        </aside>
+
+        <!-- ORGANIGRAMA CENTRAL -->
+        <div id="org-container">
+            <div id="zoom-wrapper" class="tree">
+                <ul>
+                    <li>
+                        <!-- NIVEL 1 -->
+                        <div class="node n-contract">
+                            <span class="n-role">Dirección General</span>
+                            <span class="n-name">David Blizzard</span>
+                        </div>
+                        <ul>
+                            <li>
+                                <!-- NIVEL 2 -->
+                                <div class="node n-contract">
+                                    <span class="n-role">Rep. Técnico Admin.</span>
+                                    <span class="n-name">Francisco Pichardo</span>
+                                </div>
+                                <ul>
+                                    <li>
+                                        <!-- NIVEL 3 (Subdirección a un lado) -->
+                                        <div class="node n-contract" style="margin-right: 20px;">
+                                            <span class="n-role">Sub. Dir. Proyectos</span>
+                                            <span class="n-name">Emilio Jose Segura</span>
+                                        </div>
+                                    </li>
+                                    <li>
+                                        <!-- NIVEL 3 (Gerencia Central) -->
+                                        <div class="node n-contract">
+                                            <span class="n-role">Gerente de Proyecto</span>
+                                            <span class="n-name">Jorge Eduardo Sánchez</span>
+                                        </div>
+                                        <ul>
+                                            <!-- RAMA IZQUIERDA -->
+                                            <li>
+                                                <div class="node n-contract">
+                                                    <span class="n-role">Resp. Proyecto</span>
+                                                    <span class="n-name">Embarcación</span>
+                                                </div>
+                                            </li>
+                                            <li>
+                                                <div class="node n-contract">
+                                                    <span class="n-role">Resp. Proyecto</span>
+                                                    <span class="n-name">Onshore</span>
+                                                </div>
+                                            </li>
+                                            
+                                            <!-- RAMA CENTRAL (BAJADA) -->
+                                            <li>
+                                                <!-- Representante Tecnico (Nodo puente) -->
+                                                <div class="node n-contract" style="margin-top: 40px;">
+                                                    <span class="n-role">Representante</span>
+                                                    <span class="n-name">Técnico</span>
+                                                </div>
+                                                <ul>
+                                                    <!-- NIVEL OPERATIVO MASIVO -->
+                                                    <!-- Ing Calidad -->
+                                                    <li>
+                                                        <div class="node n-contract"><span class="n-role">Ingeniero</span><span class="n-name">De Calidad</span></div>
+                                                        <ul><li><div class="node n-contract"><span class="n-name">Supervisor Calidad</span></div></li></ul>
+                                                    </li>
+                                                    <!-- Ing QA -->
+                                                    <li>
+                                                        <div class="node n-contract"><span class="n-name">Ing. de Q.A.</span></div>
+                                                        <ul><li><div class="node n-contract"><span class="n-name">Ing. Levantamientos</span></div>
+                                                            <ul><li><div class="node n-contract"><span class="n-name">Téc. AutoCAD</span></div></li></ul>
+                                                        </li></ul>
+                                                    </li>
+                                                    <!-- Planeacion -->
+                                                    <li>
+                                                        <div class="node n-contract"><span class="n-name">Coord. Planeación</span></div>
+                                                        <ul><li><div class="node n-contract"><span class="n-name">Ing. Analista</span></div></li></ul>
+                                                    </li>
+                                                    <!-- Ingenieria -->
+                                                    <li>
+                                                        <div class="node n-contract"><span class="n-name">Coord. Ingeniería</span></div>
+                                                        <ul>
+                                                            <li><div class="node n-operative"><span class="n-name">Ing. Esp. Campo</span></div></li>
+                                                            <li><div class="node n-contract"><span class="n-name">Control Materiales</span></div></li>
+                                                        </ul>
+                                                    </li>
+                                                    <!-- Sobrestante -->
+                                                    <li>
+                                                        <div class="node n-contract"><span class="n-name">Sobrestante Gral.</span></div>
+                                                        <ul><li><div class="node n-operative"><span class="n-name">Personal Optativo</span></div></li></ul>
+                                                    </li>
+                                                    <!-- SSPA -->
+                                                    <li>
+                                                        <div class="node n-contract"><span class="n-name">Sup. Esp. SSPA</span></div>
+                                                        <ul>
+                                                            <li><div class="node n-contract"><span class="n-name">Sup. Seg. Ind.</span></div></li>
+                                                            <li><div class="node n-operative"><span class="n-name">Coord. Permisos</span></div></li>
+                                                        </ul>
+                                                    </li>
+                                                    <!-- Medico -->
+                                                    <li>
+                                                        <div class="node n-contract"><span class="n-name">Médico</span></div>
+                                                        <ul><li><div class="node n-contract"><span class="n-name">Paramédico</span></div></li></ul>
+                                                    </li>
+                                                </ul>
+                                            </li>
+
+                                            <!-- RAMA DERECHA (Materiales y Patio) -->
+                                            <li>
+                                                <div class="node n-contract">
+                                                    <span class="n-role">Coord. Materiales</span>
+                                                    <span class="n-name">Onshore</span>
+                                                </div>
+                                                <ul>
+                                                    <li><div class="node n-contract"><span class="n-name">Control Materiales</span></div></li>
+                                                </ul>
+                                            </li>
+                                            <li>
+                                                <div class="node n-contract">
+                                                    <span class="n-role">Superintendente</span>
+                                                    <span class="n-name">Marco Girón</span>
+                                                </div>
+                                                <ul>
+                                                    <li><div class="node n-operative"><span class="n-name">Personal Optativo</span></div></li>
+                                                </ul>
+                                            </li>
+                                        </ul>
+                                    </li>
+                                </ul>
+                            </li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- BARRA DERECHA (APOYO 2) -->
+        <aside class="support-col">
+            <div class="support-group">
+                <h3>Apoyo Onshore</h3>
+                <div class="support-card">Precios Unitarios</div>
+                <div class="support-card">Control Proyectos</div>
+                <div class="support-card">Contratos</div>
+                <div class="support-card">Estimaciones</div>
+                <div class="support-card">Logística Personal</div>
+                <div class="support-card">Logística Materiales</div>
+            </div>
+            <div class="support-group offshore-area">
+                <h3>Apoyo Offshore</h3>
+                <div class="support-card">Recursos Humanos</div>
+                <div class="support-card">Control Proyectos</div>
+                <div class="support-card">Estimaciones</div>
+            </div>
+        </aside>
+
+    </div>
+
+    <script>
+        // LÓGICA DE ZOOM Y PAN (Arrastrar)
+        let scale = 0.8; // Zoom inicial un poco alejado para ver más
+        const zoomWrapper = document.getElementById('zoom-wrapper');
+        const container = document.getElementById('org-container');
+        
+        // Aplicar zoom inicial
+        updateZoom();
+
+        function zoomIn() {
+            scale += 0.1;
+            updateZoom();
+        }
+
+        function zoomOut() {
+            if (scale > 0.2) scale -= 0.1;
+            updateZoom();
+        }
+
+        function updateZoom() {
+            zoomWrapper.style.transform = `scale(${scale})`;
+        }
+
+        // Lógica de Arrastrar (Pan)
+        let isDown = false;
+        let startX;
+        let scrollLeft;
+        let startY;
+        let scrollTop;
+
+        container.addEventListener('mousedown', (e) => {
+            isDown = true;
+            container.classList.add('active');
+            startX = e.pageX - container.offsetLeft;
+            scrollLeft = container.scrollLeft;
+            startY = e.pageY - container.offsetTop;
+            scrollTop = container.scrollTop;
+        });
+
+        container.addEventListener('mouseleave', () => {
+            isDown = false;
+            container.classList.remove('active');
+        });
+
+        container.addEventListener('mouseup', () => {
+            isDown = false;
+            container.classList.remove('active');
+        });
+
+        container.addEventListener('mousemove', (e) => {
+            if (!isDown) return;
+            e.preventDefault();
+            const x = e.pageX - container.offsetLeft;
+            const walkX = (x - startX) * 2; // Velocidad de scroll
+            container.scrollLeft = scrollLeft - walkX;
+            
+            const y = e.pageY - container.offsetTop;
+            const walkY = (y - startY) * 2;
+            container.scrollTop = scrollTop - walkY;
+        });
+    </script>
+
+</body>
+</html>
