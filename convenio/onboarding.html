@@ -3,25 +3,24 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Organigrama Proyecto GARZPROM-2 | BME</title>
+    <title>Organigrama Proyecto GARZPROM-2</title>
     
-    <!-- Fuentes e Íconos -->
+    <!-- Fuentes -->
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800&family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
-    <!-- Librerías para PDF -->
+    <!-- Librerías PDF -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
     <style>
         :root {
-            /* PALETA CORPORATIVA */
+            /* Colores Corporativos Exactos */
+            --c-seriedad: #20145f;    /* Azul Oscuro */
             --c-fuerza: #f05523;      /* Naranja */
-            --c-seriedad: #20145f;    /* Azul Profundo - Personal Contrato */
-            --c-confianza: #51c2eb;   /* Cian - Personal Operativo/Apoyo */
+            --c-confianza: #51c2eb;   /* Cian */
             --c-solidez: #54565a;     /* Gris */
             --c-dinamismo: #fad91f;   /* Amarillo */
-            --c-energia: #8cc63f;     /* Verde */
             --bg-body: #f4f7f9;
         }
 
@@ -31,15 +30,14 @@
             height: 100vh; display: flex; flex-direction: column; overflow: hidden;
         }
 
-        /* --- CABECERA --- */
+        /* --- HEADER --- */
         header {
             background: white; padding: 10px 20px; border-bottom: 3px solid var(--c-dinamismo);
             display: flex; justify-content: space-between; align-items: center; z-index: 100;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.05); height: 60px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05); height: 60px; flex-shrink: 0;
         }
         h1 { font-family: 'Montserrat', sans-serif; color: var(--c-seriedad); margin: 0; font-size: 16px; font-weight: 800; text-transform: uppercase; }
         
-        .header-actions { display: flex; gap: 10px; }
         .btn-pdf {
             background: var(--c-fuerza); color: white; border: none; padding: 8px 15px; 
             border-radius: 5px; font-size: 12px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 8px;
@@ -50,77 +48,81 @@
         /* --- CONTROLES ZOOM --- */
         .controls {
             position: fixed; bottom: 20px; right: 20px; z-index: 1000;
-            background: white; padding: 8px; border-radius: 50px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1); display: flex; gap: 8px;
+            background: white; padding: 5px; border-radius: 50px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1); display: flex; gap: 5px;
         }
         .ctrl-btn {
-            width: 35px; height: 35px; border-radius: 50%; border: none; cursor: pointer;
+            width: 30px; height: 30px; border-radius: 50%; border: none; cursor: pointer;
             background: var(--c-seriedad); color: white; font-size: 14px; transition: 0.2s; display: flex; align-items: center; justify-content: center;
         }
         .ctrl-btn:hover { background: var(--c-confianza); }
 
-        /* --- ÁREA CENTRAL (ORGANIGRAMA) --- */
-        #main-layout { flex: 1; overflow: hidden; position: relative; cursor: grab; }
-        #main-layout:active { cursor: grabbing; }
+        /* --- ÁREA DE TRABAJO (Canvas) --- */
+        #workspace {
+            flex: 1; overflow: hidden; position: relative; cursor: grab;
+            background-image: radial-gradient(#e0e0e0 1px, transparent 1px);
+            background-size: 20px 20px;
+        }
+        #workspace:active { cursor: grabbing; }
         
-        #org-container {
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            display: flex; justify-content: center; padding-top: 40px;
+        #org-chart {
+            position: absolute; top: 50px; left: 50%; transform: translateX(-50%);
             transform-origin: top center; transition: transform 0.1s ease-out;
+            padding-bottom: 100px;
         }
 
-        /* --- ARBOL (CSS TREE) --- */
+        /* --- ÁRBOL CSS --- */
         .tree ul { padding-top: 20px; position: relative; display: flex; justify-content: center; }
-        .tree li { float: left; text-align: center; list-style-type: none; position: relative; padding: 20px 4px 0 4px; }
+        .tree li { float: left; text-align: center; list-style-type: none; position: relative; padding: 20px 5px 0 5px; }
         
         /* Conectores */
         .tree li::before, .tree li::after {
-            content: ''; position: absolute; top: 0; right: 50%; border-top: 1px solid #ccc; width: 50%; height: 20px;
+            content: ''; position: absolute; top: 0; right: 50%; border-top: 2px solid #ccc; width: 50%; height: 20px;
         }
-        .tree li::after { right: auto; left: 50%; border-left: 1px solid #ccc; }
+        .tree li::after { right: auto; left: 50%; border-left: 2px solid #ccc; }
         .tree li:only-child::after, .tree li:only-child::before { display: none; }
         .tree li:only-child { padding-top: 0; }
         .tree li:first-child::before, .tree li:last-child::after { border: 0 none; }
-        .tree li:last-child::before { border-right: 1px solid #ccc; border-radius: 0 5px 0 0; }
+        .tree li:last-child::before { border-right: 2px solid #ccc; border-radius: 0 5px 0 0; }
         .tree li:first-child::after { border-radius: 5px 0 0 0; }
-        .tree ul ul::before { content: ''; position: absolute; top: 0; left: 50%; border-left: 1px solid #ccc; width: 0; height: 20px; }
+        .tree ul ul::before { content: ''; position: absolute; top: 0; left: 50%; border-left: 2px solid #ccc; width: 0; height: 20px; }
 
-        /* --- NODOS --- */
+        /* --- NODOS (Tarjetas) --- */
         .node {
             display: inline-block; padding: 8px 10px; text-decoration: none; 
-            border-radius: 6px; transition: all 0.3s; min-width: 130px; max-width: 160px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.08); position: relative; z-index: 10; background: white;
+            border-radius: 4px; transition: all 0.3s; min-width: 140px; max-width: 160px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1); position: relative; z-index: 10; background: white;
             border: 1px solid #ddd;
         }
         .node:hover { transform: scale(1.05); z-index: 20; box-shadow: 0 8px 15px rgba(0,0,0,0.15); }
         
-        /* Tipos de Nodo */
-        .n-head { background: var(--c-seriedad); color: white; border: none; }
-        .n-sub { background: white; border-top: 3px solid var(--c-seriedad); }
+        /* Estilos por Jerarquía */
+        .n-dir { background: var(--c-seriedad); color: white; border: none; }
+        .n-exec { background: white; border-top: 3px solid var(--c-seriedad); }
         .n-op { background: white; border-top: 3px solid var(--c-confianza); }
-        .n-support { background: #eef6f8; border: 1px dashed var(--c-confianza); }
+        
+        /* Estilo Especial para Apoyo (Listas) */
+        .n-support { 
+            background: #f8fbfd; border: 1px dashed var(--c-confianza); 
+            text-align: left; padding: 10px; min-width: 160px;
+        }
 
-        .n-role { font-size: 9px; text-transform: uppercase; display: block; margin-bottom: 3px; opacity: 0.9; font-weight: 600; letter-spacing: 0.5px; }
+        .n-role { font-size: 9px; text-transform: uppercase; display: block; margin-bottom: 2px; opacity: 0.8; font-weight: 600; letter-spacing: 0.5px; }
         .n-name { font-size: 11px; font-weight: 700; display: block; line-height: 1.2; }
-        .n-head .n-role { color: var(--c-dinamismo); opacity: 1; }
-        .n-sub .n-role { color: var(--c-seriedad); }
+        .n-dir .n-role { color: var(--c-dinamismo); opacity: 1; }
+        .n-exec .n-role { color: var(--c-seriedad); }
         .n-op .n-role { color: var(--c-solidez); }
         
-        /* GRUPOS DE APOYO (Listas Compactas) */
-        .support-list { text-align: left; font-size: 9px; color: var(--c-solidez); margin-top: 5px; }
-        .support-list div { margin-bottom: 2px; display: flex; align-items: center; }
-        .support-list div::before { content: '•'; color: var(--c-fuerza); margin-right: 4px; font-weight: bold; }
-
-        /* SIMBOLOGÍA */
-        .legend {
-            position: absolute; top: 80px; left: 20px; background: white; padding: 10px;
-            border-radius: 6px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); z-index: 90; font-size: 10px;
+        /* Listas de Apoyo */
+        .support-list { margin-top: 5px; padding-left: 0; list-style: none; }
+        .support-list li { 
+            padding: 0; margin-bottom: 3px; font-size: 9px; color: var(--c-solidez); 
+            display: flex; align-items: center; text-align: left;
         }
-        .legend-item { display: flex; align-items: center; margin-bottom: 4px; }
-        .l-box { width: 10px; height: 10px; margin-right: 6px; border-radius: 2px; }
+        .support-list li::before { content: '•'; color: var(--c-fuerza); margin-right: 5px; font-weight: bold; }
 
-        /* PDF LOADER */
-        #pdf-loading {
+        /* Loader PDF */
+        #loading {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.9);
             z-index: 2000; display: none; justify-content: center; align-items: center; flex-direction: column;
         }
@@ -130,23 +132,15 @@
 <body>
 
     <header>
-        <h1>BME SUBTEC <span style="color: var(--c-solidez); font-weight: 400; font-size: 12px; margin-left: 10px;">| Organigrama GARZPROM-2</span></h1>
-        <div class="header-actions">
-            <button class="btn-pdf" onclick="downloadPDF()">
-                <i class="fa-solid fa-file-pdf"></i> Descargar PDF
-            </button>
-        </div>
+        <h1>Organigrama <span style="color: var(--c-solidez); font-weight: 400;">| Proyecto GARZPROM-2</span></h1>
+        <button class="btn-pdf" onclick="downloadPDF()">
+            <i class="fa-solid fa-file-pdf"></i> Exportar PDF
+        </button>
     </header>
 
-    <div id="pdf-loading">
-        <i class="fa-solid fa-spinner fa-spin" style="font-size: 40px; color: var(--c-seriedad);"></i>
-        <p style="margin-top: 10px; font-weight: 600; color: var(--c-solidez);">Generando PDF de alta resolución...</p>
-    </div>
-
-    <div class="legend">
-        <div class="legend-item"><div class="l-box" style="background: var(--c-seriedad);"></div> Dirección / Contrato</div>
-        <div class="legend-item"><div class="l-box" style="border-top: 3px solid var(--c-confianza); background:white;"></div> Operativo</div>
-        <div class="legend-item"><div class="l-box" style="border: 1px dashed var(--c-confianza); background:#eef6f8;"></div> Áreas de Apoyo</div>
+    <div id="loading">
+        <i class="fa-solid fa-circle-notch fa-spin" style="font-size: 40px; color: var(--c-seriedad);"></i>
+        <p style="margin-top: 10px; color: var(--c-solidez); font-weight: 600;">Generando documento...</p>
     </div>
 
     <div class="controls">
@@ -155,126 +149,123 @@
         <button class="ctrl-btn" onclick="resetZoom()"><i class="fa-solid fa-compress"></i></button>
     </div>
 
-    <!-- CONTENEDOR PRINCIPAL (ZOOMABLE) -->
-    <div id="main-layout">
-        <div id="org-container">
+    <!-- ESPACIO DE TRABAJO -->
+    <div id="workspace">
+        <div id="org-chart">
             <div class="tree">
                 <ul>
                     <li>
-                        <!-- NIVEL 1 -->
-                        <div class="node n-head">
+                        <!-- NIVEL 1: DG -->
+                        <div class="node n-dir">
                             <span class="n-role">Dirección General</span>
                             <span class="n-name">David Blizzard Chavez</span>
                         </div>
                         <ul>
                             <li>
-                                <!-- NIVEL 2 -->
-                                <div class="node n-head">
+                                <!-- NIVEL 2: Dir Ejecución -->
+                                <div class="node n-dir">
                                     <span class="n-role">Dir. Ejecución Proyectos</span>
                                     <span class="n-name">Jose Fco. Cruz Pichardo</span>
                                 </div>
                                 <ul>
-                                    <!-- RAMA APOYO ONSHORE (Antes de Rep. Técnico) -->
+                                    <!-- RAMA IZQUIERDA: APOYO ONSHORE -->
                                     <li>
                                         <div class="node n-support">
-                                            <span class="n-role" style="color: var(--c-fuerza);">Apoyo Onshore</span>
-                                            <div class="support-list">
-                                                <div>RH / Procura</div>
-                                                <div>Admin. y Finanzas</div>
-                                                <div>QHSE / Almacén</div>
-                                                <div>Planeación y Prog.</div>
-                                                <div>Control de Proyectos</div>
-                                                <div>Logística</div>
-                                            </div>
+                                            <strong style="font-size: 10px; color: var(--c-fuerza); text-transform: uppercase;">Áreas Apoyo Onshore</strong>
+                                            <ul class="support-list">
+                                                <li>Recursos Humanos</li>
+                                                <li>Procura</li>
+                                                <li>Admin. y Finanzas</li>
+                                                <li>QHSE</li>
+                                                <li>Planeación y Prog.</li>
+                                                <li>Almacén</li>
+                                                <li>Precios Unitarios</li>
+                                                <li>Control Proyectos</li>
+                                                <li>Contratos</li>
+                                                <li>Logística</li>
+                                            </ul>
                                         </div>
                                     </li>
                                     
-                                    <!-- RAMA CENTRAL -->
+                                    <!-- RAMA CENTRAL: CADENA DE MANDO -->
                                     <li>
-                                        <!-- NIVEL 3 -->
-                                        <div class="node n-sub">
+                                        <!-- NIVEL 3: Rep Técnico -->
+                                        <div class="node n-exec">
                                             <span class="n-role">Rep. Técnico Admin.</span>
                                             <span class="n-name">Emilio Jose Segura</span>
                                         </div>
                                         <ul>
-                                            <!-- RAMA APOYO OFFSHORE (Debajo de Rep. Técnico) -->
+                                            <!-- RAMA DERECHA (BAJO REP TECNICO): APOYO OFFSHORE -->
                                             <li>
                                                 <div class="node n-support">
-                                                    <span class="n-role" style="color: var(--c-confianza);">Apoyo Offshore</span>
-                                                    <div class="support-list">
-                                                        <div>QHSE</div>
-                                                        <div>Planeación</div>
-                                                        <div>Almacén</div>
-                                                        <div>Estimaciones</div>
-                                                    </div>
+                                                    <strong style="font-size: 10px; color: var(--c-confianza); text-transform: uppercase;">Áreas Apoyo Offshore</strong>
+                                                    <ul class="support-list">
+                                                        <li>QHSE</li>
+                                                        <li>Planeación</li>
+                                                        <li>Almacén</li>
+                                                        <li>Recursos Humanos</li>
+                                                        <li>Control Proyectos</li>
+                                                        <li>Estimaciones</li>
+                                                    </ul>
                                                 </div>
                                             </li>
 
-                                            <!-- NIVEL 4 -->
+                                            <!-- BAJADA PRINCIPAL -->
                                             <li>
-                                                <div class="node n-sub">
+                                                <!-- NIVEL 4: Subdirector -->
+                                                <div class="node n-exec">
                                                     <span class="n-role">Subdirector Proyectos</span>
-                                                    <span class="n-name">Jorge E. Sanchez G.</span>
+                                                    <span class="n-name">Jorge E. Sanchez Gonzalez</span>
                                                 </div>
                                                 <ul>
-                                                    <!-- NIVEL 5 -->
+                                                    <!-- NIVEL 5: PARES OPERATIVOS (Compacto) -->
                                                     <li>
                                                         <div class="node n-op">
                                                             <span class="n-role">Gerente de Proyecto</span>
                                                             <span class="n-name">Ruben Mendez Garcia</span>
                                                         </div>
-                                                        <!-- NIVEL 6 (PARES OPERATIVOS) -->
-                                                        <ul>
-                                                            <!-- 1. Gerente Patio -->
-                                                            <li>
-                                                                <div class="node n-op">
-                                                                    <span class="n-role">Gerente de Patio</span>
-                                                                    <span class="n-name">Alejandro Cortazar V.</span>
-                                                                </div>
-                                                            </li>
-                                                            <!-- 2. Gerente Ingenieria -->
-                                                            <li>
-                                                                <div class="node n-op">
-                                                                    <span class="n-role">Gerente Ingeniería</span>
-                                                                    <span class="n-name">Guillermo Diaz G.</span>
-                                                                </div>
-                                                            </li>
-                                                            <!-- 3. Blue Giant -->
-                                                            <li>
-                                                                <div class="node n-head">
-                                                                    <span class="n-role">Resp. Blue Giant</span>
-                                                                    <span class="n-name">Victor M. Utrera D.</span>
-                                                                </div>
-                                                            </li>
-                                                            <!-- 4. Blue Stingray -->
-                                                            <li>
-                                                                <div class="node n-head">
-                                                                    <span class="n-role">Resp. Blue Stingray</span>
-                                                                    <span class="n-name">Armando Paez Garcia</span>
-                                                                </div>
-                                                            </li>
-                                                            <!-- 5. Lider Proyecto -->
-                                                            <li>
-                                                                <div class="node n-op">
-                                                                    <span class="n-role">Lider de Proyecto</span>
-                                                                    <span class="n-name">Donato Miramontes</span>
-                                                                </div>
-                                                            </li>
-                                                            <!-- 6. Materiales -->
-                                                            <li>
-                                                                <div class="node n-op">
-                                                                    <span class="n-role">Coord. Materiales</span>
-                                                                    <span class="n-name">Simon Santos C.</span>
-                                                                </div>
-                                                            </li>
-                                                            <!-- 7. Admin Contrato -->
-                                                            <li>
-                                                                <div class="node n-op">
-                                                                    <span class="n-role">Admin. Contrato</span>
-                                                                    <span class="n-name">Omar Cruz Carrillo</span>
-                                                                </div>
-                                                            </li>
-                                                        </ul>
+                                                    </li>
+                                                    <li>
+                                                        <div class="node n-op">
+                                                            <span class="n-role">Gerente de Patio</span>
+                                                            <span class="n-name">Alejandro Cortazar V.</span>
+                                                        </div>
+                                                    </li>
+                                                    <li>
+                                                        <div class="node n-op">
+                                                            <span class="n-role">Gerente Ingeniería</span>
+                                                            <span class="n-name">Guillermo Diaz Garces</span>
+                                                        </div>
+                                                    </li>
+                                                    <li>
+                                                        <div class="node n-dir"> <!-- Destacado por ser Barco -->
+                                                            <span class="n-role">Resp. Blue Giant</span>
+                                                            <span class="n-name">Victor M. Utrera D.</span>
+                                                        </div>
+                                                    </li>
+                                                    <li>
+                                                        <div class="node n-dir"> <!-- Destacado por ser Barco -->
+                                                            <span class="n-role">Resp. Blue Stingray</span>
+                                                            <span class="n-name">Armando Paez Garcia</span>
+                                                        </div>
+                                                    </li>
+                                                    <li>
+                                                        <div class="node n-op">
+                                                            <span class="n-role">Lider de Proyecto</span>
+                                                            <span class="n-name">Donato Miramontes G.</span>
+                                                        </div>
+                                                    </li>
+                                                    <li>
+                                                        <div class="node n-op">
+                                                            <span class="n-role">Coord. Materiales</span>
+                                                            <span class="n-name">Simon Santos Cordova</span>
+                                                        </div>
+                                                    </li>
+                                                    <li>
+                                                        <div class="node n-op">
+                                                            <span class="n-role">Admin. Contrato</span>
+                                                            <span class="n-name">Omar Cruz Carrillo</span>
+                                                        </div>
                                                     </li>
                                                 </ul>
                                             </li>
@@ -290,37 +281,42 @@
     </div>
 
     <script>
-        // --- LÓGICA DE ZOOM Y PAN ---
+        // --- ZOOM Y PAN ---
         let scale = 0.9;
         let pannedX = 0;
         let pannedY = 0;
-        
-        const container = document.getElementById('org-container');
-        const layout = document.getElementById('main-layout');
+        const chart = document.getElementById('org-chart');
+        const workspace = document.getElementById('workspace');
 
         function updateTransform() {
-            container.style.transform = `translate(${pannedX}px, ${pannedY}px) scale(${scale})`;
+            chart.style.transform = `translate(${pannedX}px, ${pannedY}px) scale(${scale})`;
         }
-        updateTransform();
+        // Centrar inicialmente (aprox)
+        window.onload = () => {
+            // Pequeño ajuste para centrar visualmente al cargar
+            const w = workspace.offsetWidth;
+            // pannedX = w / 2 - 300; // Ajuste manual si es necesario
+            updateTransform();
+        };
 
         function zoomIn() { scale += 0.1; updateTransform(); }
         function zoomOut() { if(scale > 0.3) scale -= 0.1; updateTransform(); }
         function resetZoom() { scale = 0.9; pannedX = 0; pannedY = 0; updateTransform(); }
 
-        // --- DRAG & DROP (PAN) ---
+        // --- DRAG & DROP ---
         let isDragging = false;
         let startX, startY;
 
-        layout.addEventListener('mousedown', (e) => {
+        workspace.addEventListener('mousedown', (e) => {
             isDragging = true;
             startX = e.clientX - pannedX;
             startY = e.clientY - pannedY;
-            layout.style.cursor = 'grabbing';
+            workspace.style.cursor = 'grabbing';
         });
 
         window.addEventListener('mouseup', () => {
             isDragging = false;
-            layout.style.cursor = 'grab';
+            workspace.style.cursor = 'grab';
         });
 
         window.addEventListener('mousemove', (e) => {
@@ -331,50 +327,53 @@
             updateTransform();
         });
 
-        // --- GENERACIÓN PDF ---
+        // --- PDF GENERATOR ---
         window.jsPDF = window.jspdf.jsPDF;
 
         function downloadPDF() {
-            const loader = document.getElementById('pdf-loading');
+            const loader = document.getElementById('loading');
             loader.style.display = 'flex';
             
-            // 1. Resetear transformaciones temporalmente para capturar todo
-            const originalTransform = container.style.transform;
-            container.style.transform = 'scale(1)';
-            container.style.width = 'fit-content';
-            container.style.height = 'fit-content';
-            container.style.position = 'static'; // Sacar del flujo absoluto
+            // 1. Preparar el elemento para captura (resetear zoom temporalmente)
+            const originalTransform = chart.style.transform;
+            const originalLeft = chart.style.left;
             
-            // Esperar renderizado
+            chart.style.transform = 'scale(1)';
+            chart.style.left = '0';
+            chart.style.width = 'fit-content';
+            chart.style.margin = '0 auto'; // Centrar
+            
             setTimeout(() => {
                 html2canvas(document.querySelector(".tree"), {
-                    scale: 2, // Alta resolución
+                    scale: 2, // Mejor calidad
                     backgroundColor: "#ffffff",
                     logging: false
                 }).then(canvas => {
                     const imgData = canvas.toDataURL('image/png');
-                    const pdf = new jsPDF('l', 'mm', 'a4'); // Landscape, A4
+                    // Crear PDF horizontal (Landscape)
+                    const pdf = new jsPDF('l', 'mm', 'a3'); // A3 para que quepa todo bien
                     
                     const imgProps = pdf.getImageProperties(imgData);
                     const pdfWidth = pdf.internal.pageSize.getWidth();
                     const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
                     
-                    // Centrar verticalmente si es más pequeño que la página
-                    const yPos = pdfHeight < pdf.internal.pageSize.getHeight() ? (pdf.internal.pageSize.getHeight() - pdfHeight) / 2 : 0;
+                    // Centrar vertical
+                    const yPos = pdfHeight < pdf.internal.pageSize.getHeight() ? 
+                                (pdf.internal.pageSize.getHeight() - pdfHeight) / 2 : 10;
 
                     pdf.addImage(imgData, 'PNG', 0, yPos, pdfWidth, pdfHeight);
                     pdf.save("Organigrama_GARZPROM2.pdf");
 
-                    // Restaurar estado
-                    container.style.transform = originalTransform;
-                    container.style.width = '100%';
-                    container.style.height = '100%';
-                    container.style.position = 'absolute';
+                    // Restaurar vista
+                    chart.style.transform = originalTransform;
+                    chart.style.left = '50%';
+                    chart.style.width = 'auto';
+                    chart.style.margin = '0';
                     loader.style.display = 'none';
                 });
             }, 500);
         }
-
     </script>
+
 </body>
 </html>
