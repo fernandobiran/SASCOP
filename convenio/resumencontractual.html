@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Resumen Contractual Original | BME SUBTEC</title>
+    
+    <!-- Fuentes e Íconos -->
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;600;700;800&family=Roboto:wght@300;400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        :root {
+            /* PALETA CORPORATIVA EXACTA */
+            --c-seriedad: #20145f;    /* Azul Profundo */
+            --c-fuerza: #f05523;      /* Naranja */
+            --c-confianza: #51c2eb;   /* Cian */
+            --c-dinamismo: #fad91f;   /* Amarillo */
+            --c-energia: #8cc63f;     /* Verde */
+            --c-solidez: #54565a;     /* Gris */
+            --bg-body: #f4f6f9;
+        }
+
+        * { box-sizing: border-box; transition: all 0.3s ease; }
+        body { margin: 0; font-family: 'Roboto', sans-serif; background: var(--bg-body); color: var(--c-solidez); overflow: hidden; height: 100vh; }
+        h1, h2, h3, h4 { font-family: 'Montserrat', sans-serif; margin-top: 0; }
+
+        /* --- LAYOUT --- */
+        #app-layout { display: flex; height: 100vh; }
+        
+        /* Header Superior */
+        header {
+            position: fixed; top: 0; left: 0; width: 100%; height: 70px;
+            background: white; padding: 0 30px; display: flex; align-items: center; justify-content: space-between;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05); z-index: 100; border-bottom: 3px solid var(--c-seriedad);
+        }
+        .brand h1 { font-size: 20px; color: var(--c-seriedad); margin: 0; font-weight: 800; }
+        .brand small { color: var(--c-solidez); font-size: 12px; font-weight: 600; }
+
+        /* Contenido Principal */
+        #main-content {
+            margin-top: 70px; width: 100%; height: calc(100vh - 70px);
+            padding: 40px; overflow-y: auto;
+        }
+
+        /* --- TARJETAS (GRID PRINCIPAL) --- */
+        .section-title {
+            font-size: 28px; font-weight: 800; color: var(--c-seriedad); margin-bottom: 10px;
+            border-left: 6px solid var(--c-fuerza); padding-left: 20px;
+        }
+        .section-desc { font-size: 16px; color: #777; margin-bottom: 40px; padding-left: 28px; margin-top: -5px; max-width: 800px; }
+
+        .cards-grid {
+            display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 25px;
+        }
+
+        .contract-card {
+            background: white; border-radius: 12px; padding: 25px; cursor: pointer; position: relative;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05); border-top: 4px solid var(--c-confianza);
+            display: flex; flex-direction: column; justify-content: space-between;
+        }
+        .contract-card:hover { transform: translateY(-5px); box-shadow: 0 15px 30px rgba(0,0,0,0.1); }
+        
+        .cc-icon { font-size: 32px; color: var(--c-seriedad); margin-bottom: 15px; }
+        .cc-title { font-size: 16px; font-weight: 700; color: var(--c-seriedad); margin-bottom: 10px; line-height: 1.4; }
+        .cc-preview { font-size: 12px; color: #888; line-height: 1.5; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+        .cc-clause {
+            margin-top: 15px; font-size: 10px; font-weight: 700; text-transform: uppercase; 
+            color: var(--c-fuerza); letter-spacing: 1px; display: flex; align-items: center; gap: 5px;
+        }
+
+        /* Estilos específicos por tema */
+        .theme-money { border-top-color: var(--c-energia); }
+        .theme-money .cc-icon { color: var(--c-energia); }
+        
+        .theme-alert { border-top-color: var(--c-fuerza); }
+        .theme-alert .cc-icon { color: var(--c-fuerza); }
+
+        .theme-legal { border-top-color: var(--c-seriedad); }
+        
+        /* --- MODAL DETALLE --- */
+        .modal-backdrop {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(32, 20, 95, 0.85); backdrop-filter: blur(5px);
+            z-index: 999; display: none; justify-content: center; align-items: center;
+        }
+        
+        .modal-content {
+            background: white; width: 700px; max-width: 90%; border-radius: 16px; overflow: hidden;
+            box-shadow: 0 25px 50px rgba(0,0,0,0.5); animation: slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        @keyframes slideUp { from { transform: translateY(50px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+        .modal-header {
+            background: var(--c-seriedad); color: white; padding: 25px 30px; display: flex; align-items: center; justify-content: space-between;
+        }
+        .mh-title { font-size: 20px; font-weight: 700; font-family: 'Montserrat'; }
+        .mh-close { cursor: pointer; font-size: 24px; transition: 0.2s; }
+        .mh-close:hover { color: var(--c-fuerza); }
+
+        .modal-body { padding: 30px; max-height: 70vh; overflow-y: auto; }
+        
+        .detail-row { margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px solid #eee; }
+        .detail-row:last-child { border-bottom: none; }
+        .dr-label { font-size: 11px; text-transform: uppercase; color: #999; font-weight: 700; margin-bottom: 5px; }
+        .dr-value { font-size: 15px; color: var(--c-solidez); line-height: 1.6; }
+        .dr-highlight { color: var(--c-seriedad); font-weight: 600; background: #f0f4f8; padding: 10px; border-radius: 6px; margin-top: 5px; }
+
+        .clause-tag {
+            display: inline-block; background: var(--c-dinamismo); color: var(--c-seriedad); 
+            padding: 4px 10px; border-radius: 4px; font-size: 11px; font-weight: 700; margin-bottom: 10px;
+        }
+
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="brand">
+            <h1>CONTRATO 648233801</h1>
+            <small>Resumen de Condiciones Originales (PEP - BME SUBTEC)</small>
+        </div>
+        <div style="font-size: 12px; color: var(--c-solidez);">
+            <i class="fa-solid fa-calendar-day"></i> Suscripción: 24 Enero 2023
+        </div>
+    </header>
+
+    <div id="main-content">
+        
+        <div class="section-title">Bases Contractuales</div>
+        <div class="section-desc">
+            Este módulo interactivo desglosa los términos originales pactados antes de cualquier modificación. Haga clic en cada tarjeta para ver el detalle legal y las citas específicas.
+        </div>
+
+        <div class="cards-grid" id="cards-container">
+            <!-- Las tarjetas se generarán con JavaScript -->
+        </div>
+
+    </div>
+
+    <!-- MODAL -->
+    <div id="detail-modal" class="modal-backdrop" onclick="closeModal(event)">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="mh-title" id="m-title">Título del Detalle</div>
+                <div class="mh-close" onclick="forceClose()"><i class="fa-solid fa-times"></i></div>
+            </div>
+            <div class="modal-body">
+                <div class="clause-tag" id="m-clause">CLÁUSULA X</div>
+                
+                <div class="detail-row">
+                    <div class="dr-label">Detalle Implicado</div>
+                    <div class="dr-value" id="m-detail">...</div>
+                </div>
+
+                <div class="detail-row">
+                    <div class="dr-label">Citas / Referencia</div>
+                    <div class="dr-highlight" id="m-quote">...</div>
+                </div>
+                
+                <div class="detail-row">
+                    <div class="dr-label">Impacto Original</div>
+                    <div class="dr-value" style="font-style: italic; color: #666;">
+                        Este punto sentó las bases para la operación inicial, antes de ser afectado por eventos posteriores (Fuerza Mayor/Convenios).
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- BASE DE DATOS DEL RESUMEN CONTRACTUAL ---
+        const contractData = [
+            {
+                title: "Objeto del Contrato",
+                icon: "fa-bullseye",
+                theme: "legal",
+                clause: "Pág. 19",
+                detail: "Ejecución de trabajos de instalación de infraestructura, montaje, rehabilitación y mantenimiento en Zonas Marinas Mexicanas.",
+                quote: "Pág. 19 y 25: Los trabajos se consideran indivisibles."
+            },
+            {
+                title: "Monto Total Original",
+                icon: "fa-sack-dollar",
+                theme: "money",
+                clause: "Pág. 19, 152",
+                detail: "$8,761,290,764.00 M.N. + $341,348,991.00 U.S.D. (Sin IVA).",
+                quote: "Monto base autorizado para el ejercicio presupuestal."
+            },
+            {
+                title: "Plazo de Ejecución",
+                icon: "fa-clock",
+                theme: "legal",
+                clause: "Pág. 23, 152",
+                detail: "3,653 Días naturales. Inicio: 01 Feb 2023. Fin: 31 Ene 2033.",
+                quote: "O hasta agotar el monto a ejercer, lo que ocurra primero."
+            },
+            {
+                title: "Forma de Pago (Original)",
+                icon: "fa-file-invoice-dollar",
+                theme: "money",
+                clause: "Cláusula 7 (Párrafo 12)",
+                detail: "Pago a 90 Días naturales posteriores a la recepción y aceptación del CFDI en la BDE.",
+                quote: "Condición financiera original (modificada posteriormente en Convenio 1)."
+            },
+            {
+                title: "Embarcación Principal",
+                icon: "fa-ship",
+                theme: "legal",
+                clause: "Anexo DT-4",
+                detail: "Barco Grúa 'GARZPROM-2'. Posicionamiento Dinámico Clase 2 OMI mínimo.",
+                quote: "Capacidad para operar con oleaje de 7 pies o vientos de 30 nudos."
+            },
+            {
+                title: "Capacidad de Grúa",
+                icon: "fa-weight-hanging",
+                theme: "legal",
+                clause: "Anexo DT-4",
+                detail: "Grúa principal (MCA AMCLYDE M60) con capacidad de 850 T.M. a 60m sobre nivel del mar.",
+                quote: "Suficiente para equipos de perforación en revolvente."
+            },
+            {
+                title: "Penas Convencionales",
+                icon: "fa-triangle-exclamation",
+                theme: "alert",
+                clause: "Cláusula 33.2",
+                detail: "Límite conjunto del 20% del monto del contrato. Si se alcanza, procede rescisión.",
+                quote: "Incluye penas por retraso en inicio de OT (0.30%) y conclusión (3.0%)."
+            },
+            {
+                title: "Rescisión de Contrato",
+                icon: "fa-ban",
+                theme: "alert",
+                clause: "Cláusula 39.1 y 39.2",
+                detail: "Por incumplimiento de plazos, cesión de derechos sin permiso o actos de corrupción.",
+                quote: "PEP también puede ser rescindido por falta de pago (>30 días) o falta de permisos."
+            },
+            {
+                title: "Combustible (Diésel)",
+                icon: "fa-gas-pump",
+                theme: "money",
+                clause: "Cláusula 53",
+                detail: "El contratista suministra el combustible. Si el consumo real excede lo propuesto, PEP recupera el costo.",
+                quote: "Aplica para trabajos en tierra y equipos optativos."
+            },
+            {
+                title: "Mantenimiento sin Pago",
+                icon: "fa-wrench",
+                theme: "money",
+                clause: "Cláusula 60",
+                detail: "12 días naturales por año para reparaciones sin derecho a cobro.",
+                quote: "Pueden ser continuos o acumulables."
+            },
+            {
+                title: "Responsabilidad Ambiental",
+                icon: "fa-leaf",
+                theme: "legal",
+                clause: "Cláusula 18",
+                detail: "El Contratista es el único responsable por contaminación o manejo de residuos peligrosos.",
+                quote: "Debe cumplir con toda la normativa ambiental vigente."
+            },
+            {
+                title: "Fuerza Mayor",
+                icon: "fa-house-tsunami",
+                theme: "legal",
+                clause: "Cláusula 29",
+                detail: "Exime de responsabilidad por demoras si el evento es imprevisible, inevitable y ajeno a las partes.",
+                quote: "Base legal utilizada posteriormente para el Convenio Modificatorio."
+            }
+        ];
+
+        // --- RENDERIZADO DE TARJETAS ---
+        const container = document.getElementById('cards-container');
+
+        contractData.forEach((item, index) => {
+            const card = document.createElement('div');
+            card.className = `contract-card theme-${item.theme}`;
+            card.onclick = () => openModal(index);
+
+            card.innerHTML = `
+                <div>
+                    <i class="fa-solid ${item.icon} cc-icon"></i>
+                    <div class="cc-title">${item.title}</div>
+                    <div class="cc-preview">${item.detail}</div>
+                </div>
+                <div class="cc-clause"><i class="fa-solid fa-book"></i> ${item.clause.split(' ')[0]}...</div>
+            `;
+            container.appendChild(card);
+        });
+
+        // --- LÓGICA DEL MODAL ---
+        const modal = document.getElementById('detail-modal');
+        const mTitle = document.getElementById('m-title');
+        const mClause = document.getElementById('m-clause');
+        const mDetail = document.getElementById('m-detail');
+        const mQuote = document.getElementById('m-quote');
+
+        function openModal(index) {
+            const data = contractData[index];
+            mTitle.innerText = data.title;
+            mClause.innerText = data.clause;
+            mDetail.innerText = data.detail;
+            mQuote.innerText = data.quote;
+            
+            modal.style.display = 'flex';
+        }
+
+        function closeModal(e) {
+            if (e.target === modal) {
+                modal.style.display = 'none';
+            }
+        }
+        
+        function forceClose() {
+            modal.style.display = 'none';
+        }
+
+    </script>
+</body>
+</html>
