@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sascop - Tablero Reportes Diarios</title>
+    <script src="https://cdn.jsdelivr.net/npm/ag-grid-enterprise@31.0.0/dist/ag-grid-enterprise.min.js"></script>
+    
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 0; background-color: #f4f4f4; }
+        
+        /* Contenedor del Título y Filtros */
+        .header-container {
+            background-color: white;
+            padding: 20px;
+            border-bottom: 1px solid #ddd;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        h2 { margin: 0; color: #333; }
+        
+        .filters { display: flex; gap: 10px; }
+        
+        select, button {
+            padding: 8px 12px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+
+        button { background-color: #007bff; color: white; border: none; cursor: pointer; }
+        button:hover { background-color: #0056b3; }
+
+        /* Estilo para la Grid */
+        #myGrid {
+            height: calc(100vh - 80px); /* Ocupa el resto de la pantalla */
+            width: 100%;
+        }
+
+        /* Colores de Estatus (Según tu imagen) */
+        .cell-ok { background-color: #90EE90 !important; color: #000; text-align: center; font-weight: bold; } /* Verde - COMPLETO */
+        .cell-ffp { background-color: #FFD700 !important; color: #000; text-align: center; font-weight: bold; } /* Amarillo - FALTA FIRMA PEP */
+        .cell-ffc { background-color: #FFB6C1 !important; color: #000; text-align: center; font-weight: bold; } /* Rosa - FALTA FIRMA CIA */
+        .cell-s { background-color: #D3D3D3 !important; color: #000; text-align: center; font-weight: bold; }   /* Gris - SUSPENDIDA */
+        .cell-na { background-color: #ffffff !important; color: #ccc; text-align: center; } /* Blanco - N/A */
+
+        /* Estilo para las filas de Guardias (Pinned Top) */
+        .guardia-row {
+            background-color: #004085 !important;
+            color: white !important;
+            font-weight: bold;
+            text-align: center;
+        }
+        
+        .guardia-pep { background-color: #B8860B !important; color: white !important; } /* Color mostaza oscuro */
+    </style>
+</head>
+<body>
+
+    <div class="header-container">
+        <div>
+            <h2>Control de Reportes Diarios</h2>
+            <small>Frente: BPD BLUE STINGRAY | Noviembre 2025</small>
+        </div>
+        <div class="filters">
+            <select id="frenteSelector">
+                <option>BPD BLUE STINGRAY</option>
+                <option>PATIO TIERRA</option>
+            </select>
+            <button onclick="alert('Funcionalidad de guardar en BD')">Guardar Cambios</button>
+        </div>
+    </div>
+
+    <div id="myGrid" class="ag-theme-alpine"></div>
+
+    <script>
+        // 1. DEFINICIÓN DE COLUMNAS
+        // Aquí congelamos las primeras columnas y generamos los días dinámicamente
+        const columnDefs = [
+            { field: "ot", headerName: "Orden de Trabajo", width: 220, pinned: 'left', filter: true },
+            { field: "descripcion", headerName: "Descripción", width: 300, pinned: 'left' },
+        ];
+
+        // Generamos columnas del día 1 al 30 dinámicamente
+        for (let i = 1; i <= 30; i++) {
+            columnDefs.push({
+                field: `dia${i}`,
+                headerName: `${i}`,
+                width: 50,
+                editable: false, // No edición directa, usaremos menú contextual
+                cellClass: (params) => {
+                    // Lógica de Colores según el valor de la celda
+                    switch (params.value) {
+                        case 'OK': return 'cell-ok';
+                        case 'FFP': return 'cell-ffp';
+                        case 'FFC': return 'cell-ffc';
+                        case 'S': return 'cell-s';
+                        default: return 'cell-na';
+                    }
+                },
+                valueFormatter: (params) => {
+                    // Mostramos un símbolo check si es OK, o el texto si es otro
+                    if (params.value === 'OK') return '✓';
+                    if (!params.value) return '';
+                    return params.value;
+                }
+            });
+        }
+
+        // 2. DATOS DE EJEMPLO (MOCK DATA)
+        // Estos vendrían de tu Backend (rd_header y rd_detalle)
+        const rowData = [
+            { ot: "REPORTE DIARIO EMBARCACIÓN", descripcion: "Reporte General del Barco", dia1: "OK", dia2: "OK", dia3: "FFP", dia4: "OK" },
+            { ot: "OT-801-25-068", descripcion: "Adecuaciones Estructurales", dia1: "OK", dia2: "OK", dia3: "OK", dia4: "FFP", dia5: "FFP" },
+            { ot: "OT-801-25-087", descripcion: "Mantenimiento Preventivo", dia1: "OK", dia2: "S", dia3: "S", dia4: "OK", dia5: "OK" },
+            { ot: "OT-801-25-090", descripcion: "Instalación de Tubería", dia1: "", dia2: "", dia3: "OK", dia4: "OK", dia5: "FFC" },
+            { ot: "OT-801-25-102", descripcion: "Soportería Cuarto de Máquinas", dia1: "OK", dia2: "OK", dia3: "OK", dia4: "OK", dia5: "OK" },
+        ];
+
+        // Rellenamos datos aleatorios para el resto de días para que se vea lleno
+        rowData.forEach(row => {
+            for(let i=6; i<=30; i++) {
+                const random = Math.random();
+                if(random > 0.8) row[`dia${i}`] = "FFP";
+                else if (random > 0.9) row[`dia${i}`] = "FFC";
+                else row[`dia${i}`] = "OK";
+            }
+        });
+
+        // 3. DATOS DE GUARDIAS (Pinned Top Rows)
+        const pinnedTopRowData = [
+            { ot: "FIRMANTE CIA", descripcion: "Ing. José Luis Romero", dia1: "", cellClass: "guardia-row" }, // Simplificado para demo
+            { ot: "FIRMANTE PEP", descripcion: "Ing. Gerardo Paredes", dia1: "", cellClass: "guardia-pep" }
+        ];
+
+        // 4. CONFIGURACIÓN DE LA GRID
+        const gridOptions = {
+            columnDefs: columnDefs,
+            rowData: rowData,
+            pinnedTopRowData: pinnedTopRowData, // Las filas de guardias arriba
+            
+            // Habilitar características Enterprise clave
+            enableRangeSelection: true, // Permite seleccionar múltiples celdas arrastrando
+            rowSelection: 'multiple',
+            
+            // MENÚ CONTEXTUAL (Clic Derecho) - La magia del cambio masivo
+            getContextMenuItems: (params) => {
+                // Solo mostramos el menú si hacen clic en las celdas de días
+                if (!params.column || params.column.getColId() === 'ot' || params.column.getColId() === 'descripcion') {
+                    return ['copy', 'paste'];
+                }
+
+                return [
+                    {
+                        name: '✅ Marcar como COMPLETO (OK)',
+                        action: () => updateSelectedCells('OK')
+                    },
+                    {
+                        name: '⚠️ Falta Firma PEP (FFP)',
+                        action: () => updateSelectedCells('FFP')
+                    },
+                    {
+                        name: '📝 Falta Firma CIA (FFC)',
+                        action: () => updateSelectedCells('FFC')
+                    },
+                    {
+                        name: '⛔ Suspendida (S)',
+                        action: () => updateSelectedCells('S')
+                    },
+                    'separator',
+                    {
+                        name: '🗑️ Limpiar / Borrar',
+                        action: () => updateSelectedCells('')
+                    },
+                    'copy',
+                    'export'
+                ];
+            },
+
+            defaultColDef: {
+                resizable: true,
+                sortable: true
+            }
+        };
+
+        // 5. FUNCIÓN PARA ACTUALIZAR CELDAS SELECCIONADAS
+        function updateSelectedCells(newStatus) {
+            const api = gridOptions.api;
+            const cellRanges = api.getCellRanges(); // Obtiene el rango seleccionado azul
+
+            if (!cellRanges || cellRanges.length === 0) return;
+
+            const itemsToUpdate = [];
+
+            cellRanges.forEach(range => {
+                const startRowIndex = Math.min(range.startRow.rowIndex, range.endRow.rowIndex);
+                const endRowIndex = Math.max(range.startRow.rowIndex, range.endRow.rowIndex);
+                const columns = range.columns;
+
+                // Recorremos las filas seleccionadas
+                for (let i = startRowIndex; i <= endRowIndex; i++) {
+                    const rowNode = api.getDisplayedRowAtIndex(i);
+                    // Ignoramos las filas pinned (guardias)
+                    if (rowNode.isRowPinned()) continue;
+
+                    const data = rowNode.data;
+                    
+                    // Recorremos las columnas seleccionadas (dia1, dia2, etc)
+                    columns.forEach(col => {
+                        const colId = col.getColId();
+                        // Solo actualizamos si es una columna de día
+                        if (colId.startsWith('dia')) {
+                            data[colId] = newStatus;
+                        }
+                    });
+                    itemsToUpdate.push(data);
+                }
+            });
+
+            // Aplicamos la transacción para refrescar la vista
+            api.applyTransaction({ update: itemsToUpdate });
+            
+            // Aquí iría la llamada a tu API Backend para guardar los cambios
+            console.log("Enviando actualización al backend...", itemsToUpdate.length, "filas afectadas.");
+        }
+
+        // 6. INICIALIZAR LA GRID
+        document.addEventListener('DOMContentLoaded', () => {
+            const gridDiv = document.querySelector('#myGrid');
+            new agGrid.Grid(gridDiv, gridOptions);
+        });
+
+    </script>
+</body>
+</html>
